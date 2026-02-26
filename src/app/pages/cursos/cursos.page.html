@@ -1,0 +1,85 @@
+<div class="page">
+  <div class="header">
+    <div>
+      <h1 class="title">Cursos</h1>
+      <p class="subtitle">Listado de cursos disponibles.</p>
+    </div>
+
+    <button class="btn btn-neutral" (click)="openCreate()" [disabled]="!isAdmin()">
+      + Crear curso
+    </button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="loading" class="loading-row">
+        <span class="spinner"></span>
+        <span>Cargando...</span>
+      </div>
+
+      <div *ngIf="!loading" class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Entidad</th>
+              <th>Inicio</th>
+              <th>Fin</th>
+              <th>Activo</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let c of cursos" (click)="openCurso(c)" style="cursor: pointer">
+              <td class="font-medium">{{ c.nombre }}</td>
+              <td>{{ c.entidad?.nombre_comercial || c.entidad?.razon_social || '—' }}</td>
+              <td>{{ prettyDate(c.fecha_inicio) }}</td>
+              <td>{{ prettyDate(c.fecha_fin) }}</td>
+
+              <td>
+                <span class="badge" [ngClass]="badgeClass(!!c.activo)">
+                  {{ c.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+
+              <td class="text-right">
+                <button
+                  class="btn btn-ghost btn-sm"
+                  (click)="openEdit(c, $event)"
+                  [disabled]="!isAdmin()"
+                >
+                  Editar
+                </button>
+              </td>
+            </tr>
+
+            <tr *ngIf="cursos.length === 0">
+              <td class="empty" colspan="6">No hay cursos para mostrar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALES -->
+  <app-crear-curso-modal
+    *ngIf="createOpen"
+    [perfil]="perfil"
+    (close)="closeAll()"
+    (created)="onCreated()"
+  />
+
+  <app-editar-curso-modal
+    *ngIf="editOpen && selected"
+    [perfil]="perfil"
+    [curso]="selected"
+    (close)="closeAll()"
+    (updated)="onUpdated()"
+  />
+</div>

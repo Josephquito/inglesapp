@@ -1,0 +1,25 @@
+.crumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 0;
+  border-radius: 12px;
+  color: #046472;
+}
+
+.crumb {
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  color: #046472;
+  transition: 0.2s;
+}
+
+.crumb:hover {
+  color: #000000;
+}
+
+.current {
+  cursor: default;
+}

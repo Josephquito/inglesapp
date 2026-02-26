@@ -1,0 +1,193 @@
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+/* tabla base */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* header */
+.table thead th {
+  text-align: left;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 700;
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  background: #fff;
+}
+
+/* celdas */
+.table td {
+  padding: 12px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  vertical-align: middle;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+/* zebra MUY sutil para lectura */
+.table tbody tr:nth-child(2n) {
+  background: rgba(0, 0, 0, 0.01);
+}
+
+/* fila clickeable */
+.row-click {
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    box-shadow 140ms ease;
+}
+
+/* hover consistente (mantiene tu teal) */
+.table tbody tr:hover {
+  background: rgba(0, 116, 133, 0.05);
+}
+
+/* accesibilidad: foco al navegar con teclado */
+.row-click:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px rgba(0, 116, 133, 0.35);
+}
+
+/* textos */
+.font-medium,
+.q-text {
+  font-weight: 700;
+}
+
+.q-meta,
+.subtext {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* alineaciones */
+.text-right {
+  text-align: right;
+}
+
+/* empty */
+.empty {
+  text-align: center;
+  padding: 18px;
+  color: #6b7280;
+}
+
+/* badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+/* (opcional) puntito indicador dentro del badge */
+.badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+/* tus colores */
+.badge-success {
+  background: rgba(0, 116, 133, 0.1);
+  color: #046472;
+  border-color: rgba(0, 116, 133, 0.25);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* botones */
+.btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    transform 80ms ease,
+    box-shadow 140ms ease;
+  line-height: 1;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 116, 133, 0.18);
+}
+
+/* estilo principal de tu sistema */
+.btn-ghost {
+  background: transparent;
+  color: #007485;
+  border-color: rgba(0, 116, 133, 0.2);
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 116, 133, 0.08);
+  color: #046472;
+}
+
+/* si en tu HTML usas btn-neutral, lo hacemos “teal ghost” */
+.btn-neutral {
+  background: rgba(0, 116, 133, 0.08);
+  color: #046472;
+  border: 1px solid rgba(0, 116, 133, 0.22);
+}
+
+.btn-neutral:hover {
+  background: rgba(0, 116, 133, 0.12);
+}
+
+/* danger */
+.btn-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  margin-left: 8px;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+/* tamaños */
+.btn-sm {
+  padding: 7px 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+/* disabled row */
+.row-disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.row-disabled:hover {
+  background: transparent;
+}

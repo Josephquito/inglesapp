@@ -1,0 +1,109 @@
+<div class="page" *ngIf="vm$ | async as vm">
+  <div class="header">
+    <div>
+      <h1 class="title">Usuarios</h1>
+      <p class="subtitle">
+        Listado completo de usuarios (incluye entidad, rol, estado y todos los campos).
+      </p>
+    </div>
+
+    <button class="btn btn-neutral" (click)="openCreate()">+ Crear usuario</button>
+  </div>
+
+  <div *ngIf="vm.errorMessage" class="alert alert-error">
+    {{ vm.errorMessage }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="vm.loading" class="loading-row">
+        <span class="spinner"></span>
+        <span>Cargando...</span>
+      </div>
+
+      <div *ngIf="!vm.loading" class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Identificación</th>
+              <th>Email</th>
+              <th>Nombres</th>
+              <th>Apellidos</th>
+              <th>Entidad</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let u of vm.usuarios">
+              <td>{{ u.identificacion }}</td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.nombres }}</td>
+              <td>{{ u.apellidos }}</td>
+
+              <td>
+                <ng-container
+                  *ngIf="u.entidad?.nombre_comercial || u.entidad?.nombre; else entidadJson"
+                >
+                  {{ u.entidad?.nombre_comercial || u.entidad?.nombre }}
+                </ng-container>
+                <ng-template #entidadJson>
+                  <span class="muted">{{ u.entidad | json }}</span>
+                </ng-template>
+              </td>
+
+              <td>
+                <ng-container *ngIf="u.rol?.codigo || u.rol?.nombre; else rolJson">
+                  {{ u.rol?.codigo || u.rol?.nombre }}
+                </ng-container>
+                <ng-template #rolJson>
+                  <span class="muted">{{ u.rol | json }}</span>
+                </ng-template>
+              </td>
+
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="u.estado?.codigo === 'A' ? 'badge-success' : 'badge-warning'"
+                >
+                  {{ u.estado?.nombre || 'N/A' }}
+                </span>
+              </td>
+
+              <td class="text-right">
+                <button class="btn btn-ghost btn-sm" (click)="openEdit(u)">Editar</button>
+              </td>
+            </tr>
+
+            <tr *ngIf="vm.usuarios.length === 0">
+              <td class="empty" colspan="8">No hay usuarios para mostrar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CREAR -->
+  <app-crear-usuario-modal
+    *ngIf="createOpen"
+    [perfil]="vm.perfil"
+    [entidades]="vm.entidades"
+    [roles]="vm.roles"
+    (close)="closeAll()"
+    (created)="onCreated()"
+  />
+
+  <!-- MODAL EDITAR -->
+  <app-editar-usuario-modal
+    *ngIf="editOpen && selected"
+    [perfil]="vm.perfil"
+    [usuario]="selected"
+    [entidades]="vm.entidades"
+    [roles]="vm.roles"
+    (close)="closeAll()"
+    (updated)="onUpdated()"
+  />
+</div>

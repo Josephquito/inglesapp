@@ -1,0 +1,54 @@
+<div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+<div class="modal">
+  <div class="modal-header">
+    <div>
+      <h2 class="modal-title">Editar curso</h2>
+      <p class="modal-subtitle">Actualiza la información del curso.</p>
+    </div>
+    <button class="x" type="button" (click)="close.emit()">✕</button>
+  </div>
+
+  <div *ngIf="error" class="modal-error">{{ error }}</div>
+
+  <div class="modal-body">
+    <form (ngSubmit)="submit()">
+      <div class="grid">
+        <label>
+          Nombre
+          <input type="text" name="nombre" [(ngModel)]="form.nombre" required />
+        </label>
+
+        <label>
+          Activo
+          <select name="activo" [(ngModel)]="form.activo">
+            <option [ngValue]="true">Sí</option>
+            <option [ngValue]="false">No</option>
+          </select>
+        </label>
+
+        <label style="grid-column: 1 / -1">
+          Descripción
+          <input type="text" name="descripcion" [(ngModel)]="form.descripcion" />
+        </label>
+
+        <label>
+          Fecha inicio
+          <input type="date" name="fecha_inicio" [(ngModel)]="form.fecha_inicio" />
+        </label>
+
+        <label>
+          Fecha fin
+          <input type="date" name="fecha_fin" [(ngModel)]="form.fecha_fin" />
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-neutral" type="submit" [disabled]="loading">
+          {{ loading ? 'Guardando...' : 'Guardar' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="close.emit()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>

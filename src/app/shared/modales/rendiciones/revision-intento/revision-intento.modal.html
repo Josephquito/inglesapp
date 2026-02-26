@@ -1,0 +1,251 @@
+<div class="modal-backdrop" (click)="close.emit()"></div>
+
+<div class="modal" role="dialog" aria-modal="true">
+  <!-- HEADER -->
+  <div class="modal-header" *ngIf="data; else headerSimple">
+    <div class="header-left">
+      <h2 class="modal-title">
+        Revisión de: <span class="student">{{ estudianteNombre() }}</span>
+      </h2>
+
+      <div class="header-subrow">
+        <span
+          class="badge"
+          [ngClass]="data.intento?.pendiente_revision ? 'badge-warning' : 'badge-success'"
+        >
+          {{ data.intento?.pendiente_revision ? 'Pendiente revisión' : 'Calificada' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button
+        class="btn btn-primary"
+        type="button"
+        (click)="onCalificarIntento()"
+        [disabled]="savingFinal"
+      >
+        {{
+          savingFinal
+            ? 'Calificando...'
+            : data.intento?.pendiente_revision
+              ? 'Calificar'
+              : 'Calificado'
+        }}
+      </button>
+    </div>
+  </div>
+
+  <ng-template #headerSimple>
+    <div class="modal-header">
+      <div class="header-left">
+        <h2 class="modal-title">Revisión</h2>
+      </div>
+    </div>
+  </ng-template>
+
+  <div *ngIf="error" class="modal-error">{{ error }}</div>
+
+  <!-- BODY -->
+  <div class="modal-body">
+    <div *ngIf="loading" class="loading-row">
+      <span class="spinner"></span>
+      <span>Cargando intento...</span>
+    </div>
+
+    <ng-container *ngIf="!loading && data">
+      <!-- Preguntas sueltas -->
+      <div class="section">
+        <div class="section-title">Preguntas sueltas</div>
+
+        <div *ngFor="let p of data.preguntas_sueltas" class="q-card">
+          <ng-container
+            [ngTemplateOutlet]="preguntaTpl"
+            [ngTemplateOutletContext]="{ p: p }"
+          ></ng-container>
+        </div>
+
+        <div *ngIf="!data.preguntas_sueltas?.length" class="empty">No hay preguntas sueltas.</div>
+      </div>
+
+      <!-- Bloques -->
+      <div class="section" *ngIf="data.bloques?.length">
+        <div class="section-title">Preguntas en bloque</div>
+
+        <div *ngFor="let b of data.bloques" class="block-card">
+          <div class="block-head">
+            <div class="block-title">
+              <span class="block-chip">{{ b?.tipo?.codigo }}</span>
+              <span>{{ b?.enunciado }}</span>
+            </div>
+
+            <div class="block-sub" *ngIf="b?.texto_base">{{ b.texto_base }}</div>
+
+            <audio *ngIf="b?.url_audio" controls class="audio" preload="metadata">
+              <source [src]="b.url_audio" />
+            </audio>
+          </div>
+
+          <div *ngFor="let p of b?.preguntas" class="q-card">
+            <ng-container
+              [ngTemplateOutlet]="preguntaTpl"
+              [ngTemplateOutletContext]="{ p: p }"
+            ></ng-container>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Template de pregunta -->
+<ng-template #preguntaTpl let-p="p">
+  <div class="q-head">
+    <div class="q-title">
+      <div class="q-text">{{ p?.texto }}</div>
+    </div>
+
+    <!-- Estado SUPER simple -->
+    <div class="q-status">
+      <ng-container *ngIf="p?.respuesta; else sinRespuesta">
+        <!-- ✅ AUTO -->
+        <ng-container *ngIf="p.respuesta.auto_calificada; else manualEstado">
+          <span class="badge" [ngClass]="p.respuesta.es_correcta ? 'badge-success' : 'badge-error'">
+            {{ p.respuesta.es_correcta ? 'Correcta' : 'Incorrecta' }}
+          </span>
+          <span class="badge badge-auto">Auto</span>
+        </ng-container>
+
+        <!-- ✅ MANUAL -->
+        <ng-template #manualEstado>
+          <span
+            class="badge"
+            [ngClass]="
+              p.respuesta.revisada
+                ? p.respuesta.es_correcta
+                  ? 'badge-success'
+                  : 'badge-error'
+                : 'badge-warning'
+            "
+          >
+            {{
+              p.respuesta.revisada
+                ? p.respuesta.es_correcta
+                  ? 'Correcta'
+                  : 'Incorrecta'
+                : 'Pendiente'
+            }}
+          </span>
+        </ng-template>
+      </ng-container>
+
+      <ng-template #sinRespuesta>
+        <span class="badge badge-warning">Sin respuesta</span>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ✅ MEDIA (image -> video -> link) -->
+  <div class="q-media" *ngIf="p?.url_multimedia as mediaUrl">
+    <img
+      *ngIf="mediaMode(p) === 'image'"
+      class="media-img"
+      [src]="mediaUrl"
+      alt="Recurso de la pregunta"
+      loading="lazy"
+      (error)="onImgError(p)"
+    />
+
+    <video
+      *ngIf="mediaMode(p) === 'video'"
+      class="media-video"
+      controls
+      playsinline
+      preload="metadata"
+      (error)="onVideoError(p)"
+    >
+      <source [src]="mediaUrl" />
+      Tu navegador no soporta este formato de video.
+    </video>
+
+    <a
+      *ngIf="mediaMode(p) === 'link'"
+      class="media-link"
+      [href]="mediaUrl"
+      target="_blank"
+      rel="noopener"
+    >
+      Abrir recurso multimedia
+    </a>
+
+    <div *ngIf="mediaMode(p) === 'link'" class="media-note">
+      Si no se reproduce aquí, el formato puede no ser compatible con Chrome.
+    </div>
+  </div>
+
+  <!-- Respuesta del estudiante -->
+  <div class="answer">
+    <div class="answer-label">Respuesta del estudiante</div>
+
+    <!-- MULTIPLE_CHOICE (✅ mostrar TEXTO, no id) -->
+    <div *ngIf="tipo(p) === 'MULTIPLE_CHOICE'">
+      <div *ngIf="p?.respuesta?.opcion_seleccionada?.id_opcion; else noOpt">
+        Opción seleccionada:
+        <b>{{ opcionSeleccionadaTexto(p) }}</b>
+      </div>
+      <ng-template #noOpt>—</ng-template>
+    </div>
+
+    <!-- MATCHING -->
+    <div *ngIf="tipo(p) === 'MATCHING'">
+      <div *ngIf="p?.respuesta?.respuesta_matching?.length; else noMatch">
+        <div class="pair" *ngFor="let par of p.respuesta.respuesta_matching">
+          <span>{{ par?.izquierda }}</span>
+          <span class="arrow">→</span>
+          <span>{{ par?.derecha }}</span>
+        </div>
+      </div>
+      <ng-template #noMatch>—</ng-template>
+    </div>
+
+    <!-- WRITING -->
+    <div *ngIf="tipo(p) === 'WRITING'">
+      <div class="box">{{ p?.respuesta?.respuesta_texto || '—' }}</div>
+    </div>
+
+    <!-- SPEAKING -->
+    <div *ngIf="tipo(p) === 'SPEAKING'">
+      <audio *ngIf="p?.respuesta?.url_audio" controls class="audio" preload="metadata">
+        <source [src]="p.respuesta.url_audio" />
+      </audio>
+      <div *ngIf="!p?.respuesta?.url_audio">—</div>
+    </div>
+  </div>
+
+  <!-- ✅ Calificación ultra simple: Correcto / Incorrecto (auto-save) -->
+  <div class="grade" *ngIf="p?.respuesta && !p?.respuesta?.auto_calificada">
+    <div class="grade-actions">
+      <button
+        class="seg-btn seg-ok"
+        type="button"
+        (click)="marcar(p, true)"
+        [disabled]="saving[p.id_pregunta]"
+      >
+        Correcto
+      </button>
+
+      <button
+        class="seg-btn seg-bad"
+        type="button"
+        (click)="marcar(p, false)"
+        [disabled]="saving[p.id_pregunta]"
+      >
+        Incorrecto
+      </button>
+
+      <span class="mini-saving" *ngIf="saving[p.id_pregunta]">Guardando…</span>
+    </div>
+
+    <div class="mini-error" *ngIf="miniError[p.id_pregunta]">{{ miniError[p.id_pregunta] }}</div>
+  </div>
+</ng-template>

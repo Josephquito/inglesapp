@@ -1,0 +1,67 @@
+<div class="page">
+  <div class="header">
+    <div>
+      <h1 class="title">Mis cursos</h1>
+      <p class="subtitle">Cursos donde estás asignado.</p>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="loading" class="loading-row">
+        <span class="spinner"></span>
+        <span>Cargando...</span>
+      </div>
+
+      <div *ngIf="!loading">
+        <div class="courses-grid" *ngIf="filteredCursos.length > 0; else emptyState">
+          <div class="course-card" *ngFor="let c of filteredCursos" (click)="openCurso(c)">
+            <div class="course-head">
+              <div class="course-name font-medium">{{ c.nombre }}</div>
+
+              <span class="badge" [ngClass]="badgeClass(!!c.activo)">
+                {{ c.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+
+            <div class="course-desc">
+              {{ c.descripcion || '—' }}
+            </div>
+
+            <div class="course-meta">
+              <div class="meta-row">
+                <span class="meta-label">Entidad:</span>
+                <span class="meta-value">
+                  {{ c.entidad?.nombre_comercial || c.entidad?.razon_social || '—' }}
+                </span>
+              </div>
+
+              <div class="meta-row">
+                <span class="meta-label">Inicio:</span>
+                <span class="meta-value">{{ prettyDate(c.fecha_inicio) }}</span>
+              </div>
+
+              <div class="meta-row">
+                <span class="meta-label">Fin:</span>
+                <span class="meta-value">{{ prettyDate(c.fecha_fin) }}</span>
+              </div>
+
+              <div class="meta-row" *ngIf="c.miRol?.nombre">
+                <span class="meta-label">Mi rol:</span>
+                <span class="meta-value">{{ c.miRol?.nombre }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyState>
+          <div class="empty">No hay cursos para mostrar.</div>
+        </ng-template>
+      </div>
+    </div>
+  </div>
+</div>

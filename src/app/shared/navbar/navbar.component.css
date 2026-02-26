@@ -1,0 +1,207 @@
+/* =========================
+   NAVBAR WRAP (scroll up/down)
+========================= */
+
+/* Contenedor fijo encima de todo */
+.nav-wrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3000;
+
+  transform: translateY(0);
+  transition: transform 0.25s ease;
+  will-change: transform;
+}
+
+/* Ocultar cuando bajas */
+.nav-wrap--hidden {
+  transform: translateY(-100%);
+}
+
+/* Mostrar cuando subes */
+.nav-wrap--visible {
+  transform: translateY(0);
+}
+
+/* =========================
+   MENUBAR BASE
+========================= */
+
+.p-menubar {
+  border: none;
+  padding: 10px 30px;
+  border-radius: 0;
+}
+
+/* Logo */
+.logo {
+  height: 50px;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.logo:hover {
+  transform: scale(1.06);
+}
+
+/* Contenedor derecho: menú + botón */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Links del menú */
+.menu-link {
+  font-size: 16px;
+  font-weight: 250;
+  text-decoration: none;
+  color: #1f2937;
+  position: relative;
+  padding: 4px 2px;
+}
+
+/* Activo */
+.menu-link.active {
+  font-weight: 450;
+}
+
+/* =========================
+   MOBILE TOGGLE
+========================= */
+
+/* Desktop/Mobile switches */
+.desktop-only {
+  display: flex;
+}
+
+.mobile-only {
+  display: none;
+}
+
+/* Hamburger */
+.p-button.hamburger {
+  --p-icon-size: 20px;
+  color: #000000;
+  background-color: transparent;
+  padding: 10px 12px;
+  border: none;
+}
+
+.p-button.hamburger:hover {
+  background-color: transparent;
+}
+
+.p-button.hamburger:not(:disabled):hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+/* =========================
+   MOBILE OVERLAY + PANEL
+   (clave para que se vea aunque estés scrolleando abajo)
+========================= */
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2980; /* debajo del panel, debajo del nav-wrap */
+  background: rgba(17, 24, 39, 0.35);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.mobile-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Panel móvil: por defecto oculto */
+.mobile-panel {
+  display: none;
+}
+
+.logout-btn {
+  margin-left: 10px;
+}
+
+.mobile-link.logout {
+  color: #b91c1c;
+  font-weight: 500;
+}
+
+.logout-link {
+  color: #dc2626; /* rojo elegante */
+  font-weight: 450;
+  cursor: pointer;
+}
+
+.logout-link:hover {
+  color: #b91c1c;
+}
+
+/* =========================
+   BREAKPOINT MÓVIL
+========================= */
+
+@media (max-width: 851px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Panel full width fijo (no depende del scroll del documento) */
+  .mobile-panel {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+
+    /* IMPORTANTE: empieza debajo del navbar.
+       Ajusta este valor si tu navbar no mide ~72px */
+    top: 70px;
+
+    z-index: 2990;
+
+    width: 100%;
+    background: #ffffff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+
+    /* Animación tipo “bandeja” (mejor que max-height en fixed) */
+    transform: translateY(-120%);
+    transition: transform 0.25s ease;
+
+    /* Scroll interno si hay muchos items */
+    max-height: calc(100vh - 70px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-panel.open {
+    transform: translateY(0);
+  }
+
+  .mobile-link {
+    display: block;
+    padding: 14px 18px;
+    color: #1f2937;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  .mobile-link:hover {
+    background: rgba(31, 41, 55, 0.06);
+  }
+}

@@ -1,0 +1,237 @@
+/* ===== BACKDROP ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 9998;
+}
+
+/* ===== MODAL CARD (igual login-card) ===== */
+.modal {
+  position: fixed;
+  z-index: 9999;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(600px, calc(100vw - 24px));
+
+  background: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* ===== HEADER ===== */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #007485;
+}
+
+.modal-subtitle {
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+  color: #6b7280;
+}
+
+/* Botón cerrar */
+.x {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+  line-height: 1;
+}
+
+.x:hover {
+  opacity: 1;
+}
+
+/* ===== BODY ===== */
+.modal-body {
+  padding: 18px;
+}
+
+/* ===== ALERTS ===== */
+.modal-error,
+.modal-success {
+  margin: 12px 18px 0;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.modal-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
+
+.modal-success {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #065f46;
+}
+
+/* ===== FORM GRID ===== */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* ===== LABELS ===== */
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* ===== INPUTS ===== */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input:not([type]),
+select {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 0.95rem;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  background: #fff;
+}
+
+input:focus,
+select:focus {
+  border-color: #007485;
+  box-shadow: 0 0 0 3px rgba(0, 116, 133, 0.15);
+}
+
+/* helpers debajo de inputs */
+.help {
+  margin-top: 2px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.field-error {
+  margin-top: 2px;
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* ===== ACTIONS ===== */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+/* ===== BOTONES ===== */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.btn-neutral {
+  background-color: #007485;
+  color: white;
+}
+
+.btn-neutral:hover {
+  background-color: #046472;
+}
+
+.btn-neutral:active {
+  transform: translateY(1px);
+}
+
+.btn-neutral:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #007485;
+  font-weight: 600;
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 116, 133, 0.08);
+}
+
+/* ===== FIX ALINEACIÓN GRID (reserva espacio para mensajes) ===== */
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field-meta {
+  min-height: 16px; /* reserva espacio aunque no haya mensaje */
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* textos bajo el input */
+.help {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.field-error {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+/* (Opcional) unifica alturas visuales de inputs/select */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+select {
+  height: 44px; /* 👈 mismo alto */
+  box-sizing: border-box;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 620px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    width: calc(100vw - 16px);
+  }
+}

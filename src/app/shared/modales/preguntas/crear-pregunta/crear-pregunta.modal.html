@@ -1,0 +1,367 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+  <div class="modal" role="dialog" aria-modal="true">
+    <!-- HEADER STICKY -->
+    <div class="modal-header">
+      <div class="title-wrap">
+        <h2 class="modal-title">{{ vm.flags.isBloqueSel ? 'Crear bloque' : 'Crear pregunta' }}</h2>
+        <p class="modal-subtitle">
+          {{
+            vm.flags.isBloqueSel
+              ? 'Configura el recurso base y agrega subpreguntas.'
+              : 'Selecciona el tipo y completa los campos.'
+          }}
+        </p>
+      </div>
+
+      <button class="x" type="button" (click)="close.emit()" aria-label="Cerrar">✕</button>
+    </div>
+
+    <div *ngIf="vm.errorTipos" class="modal-error">{{ vm.errorTipos }}</div>
+    <div *ngIf="vm.error" class="modal-error">{{ vm.error }}</div>
+
+    <!-- BODY SCROLL -->
+    <div class="modal-body">
+      <!-- SECCIÓN: Tipo -->
+      <div class="section">
+        <div class="grid">
+          <div class="field" style="grid-column: 1 / -1">
+            <label>Tipo de pregunta *</label>
+            <select
+              [(ngModel)]="form.id_tipo_pregunta"
+              (ngModelChange)="onTipoSelected($event)"
+              [disabled]="vm.loadingTipos || vm.saving"
+            >
+              <option [ngValue]="0">
+                {{ vm.loadingTipos ? 'Cargando...' : 'Seleccionar...' }}
+              </option>
+              <option *ngFor="let t of vm.tipos" [ngValue]="t.value">{{ t.label }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <ng-container *ngIf="vm.flags.showCommon">
+        <!-- ========================= -->
+        <!-- PREGUNTA SUELTA -->
+        <!-- ========================= -->
+        <ng-container *ngIf="!vm.flags.isBloqueSel">
+          <div class="section">
+            <div class="grid">
+              <div class="field" style="grid-column: 1 / -1">
+                <label>Enunciado *</label>
+                <textarea
+                  [(ngModel)]="form.texto"
+                  rows="3"
+                  placeholder="Escribe el enunciado, pregunta u orden"
+                ></textarea>
+              </div>
+
+              <div class="field" style="grid-column: 1 / -1">
+                <label>Recurso multimedia (opcional)</label>
+
+                <div class="upload-row">
+                  <input
+                    type="text"
+                    [(ngModel)]="form.url_multimedia"
+                    placeholder="Seleccione el archivo"
+                  />
+
+                  <input
+                    #filePregunta
+                    type="file"
+                    hidden
+                    accept="image/*,audio/*,video/*"
+                    (change)="
+                      subirMultimediaPregunta(filePregunta.files?.item(0) || null);
+                      filePregunta.value = ''
+                    "
+                  />
+
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    (click)="filePregunta.click()"
+                    [disabled]="vm.uploading || vm.saving"
+                  >
+                    {{ vm.uploading ? 'Subiendo...' : 'Subir' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WRITING -->
+          <div class="section" *ngIf="vm.flags.showWriting">
+            <div class="grid">
+              <div class="field" style="grid-column: 1 / -1">
+                <label>Respuesta esperada (opcional)</label>
+                <input type="text" [(ngModel)]="form.respuesta_esperada" placeholder="Ej: apple" />
+                <div class="hint">Dejar vacio si es una pregunta abierta</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SPEAKING -->
+          <div class="section" *ngIf="vm.flags.showSpeaking">
+            <div class="callout">
+              <div class="callout-title">Speaking</div>
+              <div class="callout-text">
+                El estudiante grabará su voz, la pregunta debera ser calificada manualmente.
+              </div>
+            </div>
+          </div>
+
+          <!-- MULTIPLE CHOICE -->
+          <div class="section" *ngIf="vm.flags.showMC">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Opciones</div>
+                <div class="section-hint">Mínimo 2. Marca al menos 1 correcta.</div>
+              </div>
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                (click)="addOpcion()"
+                [disabled]="vm.saving"
+              >
+                + Opción
+              </button>
+            </div>
+
+            <div class="list">
+              <div class="row-card" *ngFor="let op of form.opcionesRespuesta; let i = index">
+                <div class="row-main">
+                  <input type="text" [(ngModel)]="op.texto" placeholder="Texto de la opción..." />
+                </div>
+
+                <label class="chip-check">
+                  <input type="checkbox" [(ngModel)]="op.es_correcta" />
+                  <span>Correcta</span>
+                </label>
+
+                <button
+                  class="btn btn-ghost btn-sm"
+                  type="button"
+                  (click)="removeOpcion(i)"
+                  [disabled]="vm.saving || form.opcionesRespuesta.length <= 2"
+                >
+                  Quitar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- MATCHING -->
+          <div class="section" *ngIf="vm.flags.showMatching">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Emparejar</div>
+                <div class="section-hint">Minimo 2 pares.</div>
+              </div>
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                (click)="addPar()"
+                [disabled]="vm.saving"
+              >
+                + Par
+              </button>
+            </div>
+
+            <div class="list">
+              <div class="row-card row-2" *ngFor="let par of form.emparejamientos; let i = index">
+                <input type="text" [(ngModel)]="par.izquierda" placeholder="Pregunta o palabra" />
+                <input type="text" [(ngModel)]="par.derecha" placeholder="Respuesta" />
+
+                <button
+                  class="btn btn-ghost btn-sm"
+                  type="button"
+                  (click)="removePar(i)"
+                  [disabled]="vm.saving || form.emparejamientos.length <= 2"
+                >
+                  Quitar
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- ========================= -->
+        <!-- BLOQUE -->
+        <!-- ========================= -->
+        <ng-container *ngIf="vm.flags.isBloqueSel">
+          <div class="section">
+            <div class="callout">
+              <div class="callout-title">
+                Pregunta en bloque, configura el recurso base y luego añade subpreguntas de opción
+                múltiple
+              </div>
+            </div>
+
+            <div class="grid" style="margin-top: 12px">
+              <div class="field" style="grid-column: 1 / -1">
+                <label>Enunciado del bloque *</label>
+                <textarea
+                  [(ngModel)]="form.bloque_enunciado"
+                  rows="3"
+                  placeholder="Ej: Escucha / Lee y responde..."
+                ></textarea>
+              </div>
+
+              <!-- LISTENING -->
+              <div class="field" style="grid-column: 1 / -1" *ngIf="vm.flags.isListening">
+                <label>Audio *</label>
+                <div class="upload-row">
+                  <input type="text" [(ngModel)]="form.url_audio" placeholder="https://..." />
+
+                  <input
+                    #fileAudio
+                    type="file"
+                    hidden
+                    accept="audio/*"
+                    (change)="
+                      subirAudioBloque(fileAudio.files?.item(0) || null); fileAudio.value = ''
+                    "
+                  />
+
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    (click)="fileAudio.click()"
+                    [disabled]="vm.uploading || vm.saving"
+                  >
+                    {{ vm.uploading ? 'Subiendo...' : 'Subir audio' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- READING -->
+              <div class="field" style="grid-column: 1 / -1" *ngIf="vm.flags.isReading">
+                <label>Texto base *</label>
+                <textarea
+                  [(ngModel)]="form.texto_base"
+                  rows="7"
+                  placeholder="Pega aquí el texto de lectura..."
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUBPREGUNTAS -->
+          <div class="section">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Subpreguntas</div>
+                <div class="section-hint">Cada subpregunta requiere 2+ opciones y 1 correcta.</div>
+              </div>
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                (click)="addSubpregunta()"
+                [disabled]="vm.saving"
+              >
+                + Subpregunta
+              </button>
+            </div>
+
+            <div class="sub-list">
+              <div class="sub-card" *ngFor="let sp of form.subpreguntas; let i = index">
+                <div class="sub-head">
+                  <div class="sub-title">Subpregunta {{ i + 1 }}</div>
+
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    (click)="removeSubpregunta(i)"
+                    [disabled]="vm.saving || form.subpreguntas.length <= 1"
+                  >
+                    Quitar
+                  </button>
+                </div>
+
+                <div class="grid">
+                  <div class="field" style="grid-column: 1 / -1">
+                    <label>Enunciado *</label>
+                    <textarea
+                      [(ngModel)]="sp.texto"
+                      rows="2"
+                      placeholder="Escribe la subpregunta..."
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div class="section-head" style="margin-top: 10px">
+                  <div>
+                    <div class="section-title" style="font-size: 0.95rem">Opciones</div>
+                    <div class="section-hint">Marca 1 correcta.</div>
+                  </div>
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    (click)="addSubOpcion(i)"
+                    [disabled]="vm.saving"
+                  >
+                    + Opción
+                  </button>
+                </div>
+
+                <div class="list">
+                  <div class="row-card" *ngFor="let op of sp.opcionesRespuesta; let j = index">
+                    <div class="row-main">
+                      <input
+                        type="text"
+                        [(ngModel)]="op.texto"
+                        placeholder="Texto de la opción..."
+                      />
+                    </div>
+
+                    <label class="chip-check">
+                      <input type="checkbox" [(ngModel)]="op.es_correcta" />
+                      <span>Correcta</span>
+                    </label>
+
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      type="button"
+                      (click)="removeSubOpcion(i, j)"
+                      [disabled]="vm.saving || sp.opcionesRespuesta.length <= 2"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+
+    <!-- FOOTER STICKY -->
+    <div class="modal-footer">
+      <div class="footer-left">
+        <span class="pill" *ngIf="vm.tipoSel">{{ vm.tipoSel.label }}</span>
+        <span class="muted" *ngIf="vm.uploading">Subiendo archivo…</span>
+      </div>
+
+      <div class="footer-right">
+        <button class="btn btn-ghost" type="button" (click)="close.emit()" [disabled]="vm.saving">
+          Cancelar
+        </button>
+
+        <button
+          class="btn btn-neutral"
+          type="button"
+          (click)="submit(vm)"
+          [disabled]="vm.saving || !vm.tipoSel"
+        >
+          {{
+            vm.saving ? 'Guardando...' : vm.flags.isBloqueSel ? 'Crear bloque' : 'Crear pregunta'
+          }}
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-container>

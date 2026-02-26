@@ -1,0 +1,88 @@
+<div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+<div class="modal" role="dialog" aria-modal="true">
+  <div class="modal-header">
+    <div>
+      <h2 class="modal-title">Crear curso</h2>
+      <p class="modal-subtitle">Selecciona la entidad y define la información del curso.</p>
+    </div>
+    <button class="x" type="button" (click)="close.emit()">✕</button>
+  </div>
+
+  <div *ngIf="error" class="modal-error">{{ error }}</div>
+
+  <div class="modal-body">
+    <form (ngSubmit)="submit()" autocomplete="off">
+      <div class="grid">
+        <!-- ENTIDAD -->
+        <div class="field">
+          <label>Entidad</label>
+
+          <ng-container *ngIf="entidadesState$ | async as st">
+            <select
+              [(ngModel)]="form.id_entidad"
+              name="id_entidad"
+              required
+              [disabled]="loading || st.loading"
+            >
+              <option [ngValue]="0">
+                {{ st.loading ? 'Cargando entidades...' : 'Seleccione una entidad' }}
+              </option>
+
+              <option *ngFor="let e of st.items" [ngValue]="e.value">
+                {{ e.label }}
+              </option>
+            </select>
+          </ng-container>
+
+          <div class="field-meta">
+            <span class="help"> </span>
+          </div>
+        </div>
+
+        <!-- NOMBRE -->
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" name="nombre" [(ngModel)]="form.nombre" required />
+          <div class="field-meta">
+            <span class="help"> </span>
+          </div>
+        </div>
+
+        <!-- DESCRIPCIÓN -->
+        <div class="field" style="grid-column: 1 / -1">
+          <label>Descripción</label>
+          <input type="text" name="descripcion" [(ngModel)]="form.descripcion" />
+          <div class="field-meta">
+            <span class="help"> </span>
+          </div>
+        </div>
+
+        <!-- FECHA INICIO -->
+        <div class="field">
+          <label>Fecha inicio</label>
+          <input type="date" name="fecha_inicio" [(ngModel)]="form.fecha_inicio" />
+          <div class="field-meta">
+            <span class="help"> </span>
+          </div>
+        </div>
+
+        <!-- FECHA FIN -->
+        <div class="field">
+          <label>Fecha fin</label>
+          <input type="date" name="fecha_fin" [(ngModel)]="form.fecha_fin" />
+          <div class="field-meta">
+            <span class="help"> </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-neutral" type="submit" [disabled]="loading">
+          {{ loading ? 'Creando...' : 'Crear curso' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="close.emit()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>

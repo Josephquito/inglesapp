@@ -1,0 +1,66 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Título</th>
+        <th>Estado</th>
+        <th class="text-right" *ngIf="canManage">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr
+        *ngFor="let e of evaluaciones"
+        class="row-clickable"
+        (click)="onOpen(e)"
+        style="cursor: pointer"
+      >
+        <td class="font-medium">
+          <div class="cell">
+            <div class="name">{{ e.titulo }}</div>
+            <div class="desc">{{ e.descripcion || '—' }}</div>
+          </div>
+        </td>
+
+        <td>
+          <span class="badge" [ngClass]="e.activa ? 'badge-success' : 'badge-warning'">
+            {{ e.activa ? 'Activa' : 'Inactiva' }}
+          </span>
+        </td>
+
+        <td class="text-right" *ngIf="canManage">
+          <button class="btn btn-ghost btn-sm" (click)="$event.stopPropagation(); editar.emit(e)">
+            Editar
+          </button>
+
+          <button
+            class="btn btn-ghost btn-sm"
+            *ngIf="!e.activa"
+            (click)="$event.stopPropagation(); activar.emit(e)"
+          >
+            Activar
+          </button>
+
+          <button
+            class="btn btn-ghost btn-sm"
+            *ngIf="e.activa"
+            (click)="$event.stopPropagation(); inactivar.emit(e)"
+          >
+            Inactivar
+          </button>
+
+          <button
+            class="btn btn-ghost btn-sm danger"
+            (click)="$event.stopPropagation(); eliminar.emit(e)"
+          >
+            Eliminar
+          </button>
+        </td>
+      </tr>
+
+      <tr *ngIf="evaluaciones.length === 0">
+        <td class="empty" [attr.colspan]="canManage ? 3 : 2">No hay evaluaciones.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

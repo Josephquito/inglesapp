@@ -1,0 +1,122 @@
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  text-align: left;
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 600;
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  vertical-align: top;
+  font-size: 0.95rem;
+  color: #111827;
+}
+
+.table tbody tr:hover {
+  background: rgba(0, 116, 133, 0.04);
+}
+
+.font-medium {
+  font-weight: 600;
+}
+.text-right {
+  text-align: right;
+}
+
+.q-text {
+  font-weight: 600;
+}
+.q-meta {
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+.empty {
+  text-align: center;
+  padding: 18px;
+  color: #6b7280;
+}
+
+/* badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.badge-success {
+  background: rgba(0, 116, 133, 0.1);
+  color: #046472;
+  border-color: rgba(0, 116, 133, 0.25);
+}
+
+.badge-warning {
+  background: rgba(245, 158, 11, 0.12);
+  color: #92400e;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* botones */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #007485;
+}
+
+.btn-ghost:hover {
+  background: rgba(0, 116, 133, 0.08);
+  color: #046472;
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  margin-left: 8px;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.row-click {
+  cursor: pointer;
+}
+
+.row-click:hover {
+  background: rgba(16, 185, 129, 0.08); /* verde suave */
+}
+
+.row-disabled {
+  cursor: default;
+}
+
+.row-disabled:hover {
+  background: transparent;
+}

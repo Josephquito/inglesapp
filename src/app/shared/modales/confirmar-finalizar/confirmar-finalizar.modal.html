@@ -1,0 +1,33 @@
+<div class="modal-backdrop" (click)="onBackdrop($event)">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <h3>¿Seguro que deseas finalizar?</h3>
+      <button class="icon-btn" type="button" (click)="close.emit()" [disabled]="loading">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+
+      <div class="info">
+        <div class="info-sub">Las preguntas sin responder valen <strong>0</strong>.</div>
+
+        <div class="rules">
+          <div class="rule">• Al finalizar, la evaluación queda entregada.</div>
+          <div class="rule">• No podrás cambiar tus respuestas después.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" type="button" (click)="close.emit()" [disabled]="loading">
+        Cancelar
+      </button>
+
+      <!-- OJO: tu CSS no tiene btn-danger en este bloque, así que uso btn-neutral para mantener estilo.
+           Si quieres rojo, dime y te dejo el .btn-danger en el mismo estilo. -->
+      <button class="btn btn-neutral" type="button" (click)="confirm.emit()" [disabled]="loading">
+        {{ loading ? 'Finalizando...' : 'Finalizar' }}
+      </button>
+    </div>
+  </div>
+</div>

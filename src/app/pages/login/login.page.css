@@ -1,0 +1,145 @@
+/* Vista general */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 0;
+  overflow: hidden;
+}
+.login-card {
+  margin: 0 1rem;
+}
+
+/* Card principal */
+.login-card {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Logo */
+.login-logo {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+
+/* Título */
+.login-title {
+  color: #007485;
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 10px 0 15px;
+}
+
+/* Inputs */
+.login-input,
+.password-wrapper input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 1rem;
+
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.login-input:focus,
+.password-wrapper input:focus {
+  border-color: #007485;
+  box-shadow: 0 0 0 3px rgba(0, 116, 133, 0.15);
+}
+
+/* Password wrapper */
+.password-wrapper {
+  position: relative;
+}
+
+/* Toggle password */
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-70%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.pi {
+  font-size: 23px;
+}
+/* Botón */
+.login-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #007485;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+}
+
+.login-button:hover {
+  background-color: #046472;
+}
+
+.login-button:active {
+  transform: translateY(1px);
+}
+
+.login-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error */
+.error-box {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.error-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 500px) {
+  .login-card {
+    padding: 1.5rem;
+  }
+
+  .login-title {
+    font-size: 1.3rem;
+  }
+
+  .login-logo {
+    max-width: 220px;
+  }
+}

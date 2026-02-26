@@ -1,0 +1,68 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="page">
+    <div class="header">
+      <div>
+        <h1 class="title">{{ vm.curso?.nombre || 'Curso' }}</h1>
+        <p class="subtitle">{{ vm.curso?.descripcion || '—' }}</p>
+      </div>
+
+      <button class="btn btn-neutral" (click)="openAsignar()" [disabled]="!vm.isAdmin">
+        + Asignar usuario
+      </button>
+    </div>
+
+    <div *ngIf="vm.errorMessage" class="alert alert-error">{{ vm.errorMessage }}</div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="k">Entidad</div>
+            <div class="v">{{ vm.curso?.entidad?.nombre_comercial || '—' }}</div>
+          </div>
+          <div class="info-item">
+            <div class="k">Inicio</div>
+            <div class="v">{{ prettyDate(vm.curso?.fecha_inicio) }}</div>
+          </div>
+          <div class="info-item">
+            <div class="k">Fin</div>
+            <div class="v">{{ prettyDate(vm.curso?.fecha_fin) }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div *ngIf="vm.loading" class="loading-row">
+          <span class="spinner"></span>
+          <span>Cargando...</span>
+        </div>
+
+        <app-curso-usuarios-table
+          *ngIf="!vm.loading"
+          [usuarios]="vm.usuariosAsignados"
+          [isAdmin]="vm.isAdmin"
+          (remove)="openRemover($event)"
+        />
+      </div>
+    </div>
+
+    <app-asignar-usuario-modal
+      *ngIf="asignarOpen"
+      [perfil]="vm.perfil"
+      [curso]="vm.curso"
+      (close)="closeAll()"
+      (assigned)="onAssigned()"
+    />
+
+    <app-remover-usuario-modal
+      *ngIf="removerOpen && selectedUsuario"
+      [perfil]="vm.perfil"
+      [curso]="vm.curso"
+      [usuario]="selectedUsuario"
+      (close)="closeAll()"
+      (removed)="onRemoved()"
+    />
+  </div>
+</ng-container>

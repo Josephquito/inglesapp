@@ -1,0 +1,53 @@
+<div *ngIf="open" class="modal-backdrop" (click)="onClose()"></div>
+
+<div *ngIf="open" class="modal" (click)="$event.stopPropagation()">
+  <div class="modal-header">
+    <h2>Crear entidad</h2>
+    <button class="x" type="button" (click)="onClose()">✕</button>
+  </div>
+
+  <div *ngIf="errorMessage" class="modal-error">
+    {{ errorMessage }}
+  </div>
+
+  <form (ngSubmit)="submit()" #f="ngForm" class="modal-body">
+    <div class="grid">
+      <label>
+        RUC
+        <input name="ruc" [(ngModel)]="form.ruc" required />
+      </label>
+
+      <label>
+        Nombre comercial
+        <input name="nombre_comercial" [(ngModel)]="form.nombre_comercial" required />
+      </label>
+
+      <label>
+        Razón social
+        <input name="razon_social" [(ngModel)]="form.razon_social" required />
+      </label>
+
+      <label>
+        Dirección
+        <input name="direccion" [(ngModel)]="form.direccion" required />
+      </label>
+
+      <label>
+        Logo (URL o ruta)
+        <input name="imagen_logo" [(ngModel)]="form.imagen_logo" />
+      </label>
+
+      <label class="row">
+        <input type="checkbox" name="activo" [(ngModel)]="form.activo" />
+        Activo
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" (click)="onClose()">Cancelar</button>
+      <button class="btn btn-neutral" type="submit" [disabled]="loading || f.invalid">
+        {{ loading ? 'Guardando...' : 'Crear' }}
+      </button>
+    </div>
+  </form>
+</div>

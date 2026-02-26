@@ -1,0 +1,29 @@
+<div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+<div class="modal">
+  <div class="modal-header">
+    <div>
+      <h2 class="modal-title">Remover usuario</h2>
+      <p class="modal-subtitle">Esta acción elimina la asignación del curso.</p>
+    </div>
+    <button class="x" type="button" (click)="close.emit()">✕</button>
+  </div>
+
+  <div *ngIf="error" class="modal-error">{{ error }}</div>
+
+  <div class="modal-body">
+    <p style="margin: 0; color: #374151; font-weight: 600">
+      ¿Seguro que deseas remover a
+      <span style="color: #007485">{{ usuario?.nombres }} {{ usuario?.apellidos }}</span>
+      del curso <span style="color: #007485">{{ curso?.nombre }}</span
+      >?
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn btn-neutral" type="button" (click)="submit()" [disabled]="loading">
+        {{ loading ? 'Removiendo...' : 'Sí, remover' }}
+      </button>
+      <button class="btn btn-ghost" type="button" (click)="close.emit()">Cancelar</button>
+    </div>
+  </div>
+</div>

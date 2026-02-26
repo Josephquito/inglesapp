@@ -1,0 +1,49 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Pregunta</th>
+        <th style="width: 220px">Tipo</th>
+        <th style="width: 140px">Modo</th>
+
+        <!-- Solo queda eliminar -->
+        <th class="text-right" *ngIf="canEdit" style="width: 140px">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr
+        *ngFor="let p of preguntas"
+        class="row-click"
+        [class.row-disabled]="!canOpenEdit(p)"
+        (click)="onRowClick(p)"
+        [attr.role]="canOpenEdit(p) ? 'button' : null"
+        [attr.tabindex]="canOpenEdit(p) ? 0 : null"
+        (keydown.enter)="onRowClick(p)"
+        (keydown.space)="onRowClick(p)"
+        [attr.aria-disabled]="canOpenEdit(p) ? 'false' : 'true'"
+      >
+        <td>
+          <div class="q-text">{{ displayText(p) }}</div>
+        </td>
+
+        <td>{{ tipoNombre(p) }}</td>
+
+        <td>
+          <span class="badge" [ngClass]="badgeClass(p)">
+            {{ modoLabel(p) }}
+          </span>
+        </td>
+
+        <td class="text-right" *ngIf="canEdit">
+          <!-- Importante: stopPropagation para que NO abra editar -->
+          <button class="btn btn-danger btn-sm" (click)="onDeleteClick($event, p)">Eliminar</button>
+        </td>
+      </tr>
+
+      <tr *ngIf="preguntas.length === 0">
+        <td class="empty" [attr.colspan]="canEdit ? 4 : 3">No hay preguntas.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

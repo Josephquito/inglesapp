@@ -1,0 +1,26 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Rol en curso</th>
+        <th class="text-right" *ngIf="isAdmin">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr *ngFor="let u of usuarios">
+        <td class="font-medium">{{ u.nombres }} {{ u.apellidos }}</td>
+        <td>{{ u.rol_nombre || '—' }}</td>
+
+        <td class="text-right" *ngIf="isAdmin">
+          <button class="btn btn-ghost btn-sm" (click)="remove.emit(u)">Remover</button>
+        </td>
+      </tr>
+
+      <tr *ngIf="usuarios.length === 0">
+        <td class="empty" [attr.colspan]="isAdmin ? 3 : 2">No hay usuarios asignados.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

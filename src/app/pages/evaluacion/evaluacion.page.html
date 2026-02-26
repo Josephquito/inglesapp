@@ -1,0 +1,119 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="page">
+    <app-breadcrumbs [labelMap]="vm.labelMap"></app-breadcrumbs>
+
+    <div class="header">
+      <div>
+        <h1 class="title">{{ vm.evaluacion?.titulo || 'Evaluación' }}</h1>
+        <p class="subtitle" *ngIf="vm.evaluacion?.descripcion">{{ vm.evaluacion.descripcion }}</p>
+      </div>
+
+      <button
+        *ngIf="vm.isDocente"
+        class="btn btn-neutral"
+        (click)="openCreate(vm)"
+        [disabled]="vm.loading"
+      >
+        + Crear pregunta
+      </button>
+    </div>
+
+    <div *ngIf="vm.errorMessage" class="alert alert-error">
+      {{ vm.errorMessage }}
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div *ngIf="vm.loading" class="loading-row">
+          <span class="spinner"></span>
+          <span>Cargando...</span>
+        </div>
+
+        <div *ngIf="!vm.loading">
+          <div class="tabs">
+            <button
+              class="tab"
+              [class.active]="activeTab === 'preguntas'"
+              (click)="setTab('preguntas')"
+              type="button"
+            >
+              Preguntas
+            </button>
+
+            <button
+              class="tab"
+              [class.active]="activeTab === 'respuestas'"
+              (click)="setTab('respuestas')"
+              type="button"
+            >
+              Respuestas
+            </button>
+          </div>
+
+          <div class="tab-content">
+            <!-- PREGUNTAS -->
+            <div *ngIf="activeTab === 'preguntas'">
+              <div *ngIf="vm.loadingPreguntas" class="loading-row">
+                <span class="spinner"></span>
+                <span>Cargando preguntas...</span>
+              </div>
+
+              <app-preguntas-table
+                *ngIf="!vm.loadingPreguntas"
+                [preguntas]="vm.itemsTabla"
+                [canEdit]="vm.isDocente"
+                (edit)="openEdit($event)"
+                (remove)="onDelete($event)"
+              />
+            </div>
+
+            <!-- RESPUESTAS -->
+            <div *ngIf="activeTab === 'respuestas'">
+              <ng-container *ngIf="!vm.isDocente; else docenteRespuestas">
+                <div class="empty-block">
+                  <div class="empty-title">Respuestas</div>
+                  <div class="empty-text">Solo DOCENTE/ADMIN puede revisar intentos.</div>
+                </div>
+              </ng-container>
+
+              <ng-template #docenteRespuestas>
+                <div *ngIf="vm.loadingRespuestas" class="loading-row">
+                  <span class="spinner"></span>
+                  <span>Cargando intentos...</span>
+                </div>
+
+                <app-intentos-mejor-table
+                  *ngIf="!vm.loadingRespuestas"
+                  [intentos]="vm.intentosMejor"
+                  (open)="openRevision($event)"
+                />
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALES -->
+    <app-crear-pregunta-modal
+      *ngIf="createOpen"
+      [idEvaluacion]="vm.id_evaluacion"
+      (close)="closeAll()"
+      (created)="onCreated()"
+    />
+
+    <app-editar-pregunta-modal
+      *ngIf="editOpen && selectedPregunta"
+      [pregunta]="selectedPregunta"
+      (close)="closeAll()"
+      (updated)="onUpdated()"
+    />
+  </div>
+
+  <app-revision-intento-modal
+    *ngIf="revisionOpen && selectedIntentoId"
+    [idIntento]="selectedIntentoId"
+    (close)="closeRevision()"
+    (changed)="setTab('respuestas')"
+  ></app-revision-intento-modal>
+</ng-container>

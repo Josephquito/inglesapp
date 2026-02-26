@@ -1,0 +1,181 @@
+/* ====== CONTENEDOR GENERAL ====== */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 14px;
+}
+
+/* ====== HEADER ====== */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  color: #007485;
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+
+/* ====== ALERTA ERROR ====== */
+.alert {
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #b91c1c;
+}
+
+/* ====== CARD ====== */
+.card {
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  width: 100%;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+/* ====== LOADING ====== */
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #374151;
+  padding: 6px 0;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 0, 0, 0.15);
+  border-top-color: rgba(0, 116, 133, 0.85);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ====== BOTONES ====== */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.btn-neutral {
+  background-color: #007485;
+  color: white;
+}
+
+.btn-neutral:hover {
+  background-color: #046472;
+}
+.btn-neutral:active {
+  transform: translateY(1px);
+}
+.btn-neutral:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ====== TABS ====== */
+.tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+
+.tab {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #007485;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.tab:hover {
+  background: rgba(0, 116, 133, 0.06);
+  border-color: rgba(0, 116, 133, 0.22);
+}
+
+.tab.active {
+  background: rgba(0, 116, 133, 0.1);
+  border-color: rgba(0, 116, 133, 0.3);
+  color: #046472;
+}
+
+/* ====== CONTENIDO ====== */
+.tab-content {
+  width: 100%;
+}
+
+.empty-block {
+  border: 1px dashed rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(0, 116, 133, 0.02);
+}
+
+.empty-title {
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.empty-text {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width: 700px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .btn-neutral {
+    width: 100%;
+  }
+  .card-body {
+    padding: 1rem;
+  }
+  .title {
+    font-size: 1.35rem;
+  }
+  .tabs {
+    flex-wrap: wrap;
+  }
+}

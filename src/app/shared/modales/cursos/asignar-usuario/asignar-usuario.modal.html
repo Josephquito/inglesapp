@@ -1,0 +1,75 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Asignar usuario</h2>
+        <p class="modal-subtitle">Escribe cédula o nombre y selecciona del desplegable.</p>
+      </div>
+      <button class="x" type="button" (click)="close.emit()">✕</button>
+    </div>
+
+    <div *ngIf="vm.error" class="modal-error">{{ vm.error }}</div>
+
+    <div class="modal-body">
+      <div class="grid">
+        <div class="field" style="grid-column: 1 / -1">
+          <label>Buscar</label>
+
+          <input
+            #searchInput
+            type="text"
+            [value]="search"
+            (input)="onSearchChange(searchInput.value, vm.usuariosDisponibles)"
+            placeholder="Ej: 0912345678 o Juan Pérez"
+            [disabled]="vm.loading || assigning"
+          />
+
+          <div *ngIf="resultados.length > 0" class="autocomplete">
+            <button
+              class="autocomplete-item"
+              type="button"
+              *ngFor="let u of resultados"
+              (click)="pick(u)"
+              [disabled]="assigning"
+            >
+              <span class="font-medium">{{ u.identificacion }}</span>
+              <span> — {{ u.nombres }} {{ u.apellidos }}</span>
+              <span class="muted"> ({{ u.rol?.codigo || u.rol?.nombre || 'ROL' }})</span>
+            </button>
+          </div>
+
+          <div class="field-meta">
+            <span class="help" *ngIf="!selected"
+              >Selecciona un usuario para habilitar Asignar.</span
+            >
+            <span class="help" *ngIf="selected">
+              Seleccionado: {{ selected.nombres }} {{ selected.apellidos }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="btn btn-neutral"
+          type="button"
+          (click)="asignarSeleccionado(vm)"
+          [disabled]="vm.loading || assigning || !selected"
+        >
+          {{ assigning ? 'Asignando...' : 'Asignar' }}
+        </button>
+
+        <button
+          class="btn btn-ghost"
+          type="button"
+          (click)="close.emit()"
+          [disabled]="vm.loading || assigning"
+        >
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-container>

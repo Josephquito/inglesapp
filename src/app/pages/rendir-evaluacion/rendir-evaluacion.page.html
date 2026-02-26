@@ -1,0 +1,201 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="page">
+    <ng-container *ngIf="vm.entregadoConExito; else rendirTpl">
+      <div class="success-container">
+        <div class="card success-card">
+          <div class="card-body">
+            <div
+              *ngIf="vm.suspended"
+              class="alert alert-error"
+              style="margin-bottom: 24px; text-align: center"
+            >
+              <strong>EXAMEN SUSPENDIDO</strong>
+              <p style="margin: 4px 0 0; font-size: 0.9rem">
+                Se han registrado 3 intentos de fraude. El sistema ha bloqueado el acceso y enviado
+                tus respuestas automáticamente.
+              </p>
+            </div>
+
+            <div class="success-header">
+              <h1 class="title">
+                {{ vm.suspended ? 'Evaluación Finalizada' : '¡Evaluación Entregada!' }}
+              </h1>
+              <p class="subtitle">
+                {{
+                  vm.suspended
+                    ? 'Tu acceso ha sido restringido por seguridad.'
+                    : 'Tu intento ha sido procesado correctamente.'
+                }}
+              </p>
+            </div>
+
+            <div class="result-content" *ngIf="vm.resultado">
+              <div class="score-display" *ngIf="!vm.resultado.pendiente_revision">
+                <span class="label">Tu calificación final</span>
+                <div class="grade">
+                  <span class="number">{{ vm.resultado.calificacion }}</span>
+                  <span class="total">/ 100</span>
+                </div>
+              </div>
+
+              <div class="pending-display" *ngIf="vm.resultado.pendiente_revision">
+                <div class="alert alert-warning">
+                  Tu docente debe revisar las preguntas abiertas para asignar la nota definitiva.
+                </div>
+                <p *ngIf="vm.resultado.calificacion > 0" class="note">
+                  Puntaje parcial automático: <strong>{{ vm.resultado.calificacion }} / 100</strong>
+                </p>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn btn-primary btn-lg" (click)="irAlInicio()">Volver al Curso</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #rendirTpl>
+      <div class="header">
+        <div>
+          <h1 class="title">{{ vm.titulo }}</h1>
+
+          <div class="meta-info">
+            <p class="subtitle" *ngIf="vm.tieneTiempo">
+              Tiempo restante:
+              <strong class="timer" [class.danger]="vm.timerDanger">{{ vm.timerText }}</strong>
+            </p>
+
+            <p class="subtitle" *ngIf="vm.total">
+              Pregunta <strong>{{ vm.currentIndex + 1 }}</strong> de {{ vm.total }}
+            </p>
+
+            <p class="subtitle" *ngIf="vm.proctoringRequired">
+              Avisos:
+              <strong [style.color]="vm.warnings >= 2 ? '#b91c1c' : 'inherit'">{{
+                vm.warnings
+              }}</strong>
+              / 3
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="vm.errorMessage" class="alert alert-error">{{ vm.errorMessage }}</div>
+
+      <div class="card main-card">
+        <div class="card-body">
+          <div *ngIf="vm.loading" class="loading-row">
+            <span class="spinner"></span>
+            <span>Preparando evaluación...</span>
+          </div>
+
+          <ng-container *ngIf="!vm.loading && vm.total">
+            <div *ngIf="vm.proctoringRequired && !vm.proctoringReady" class="alert alert-warning">
+              <div><b>Esta evaluación requiere cámara.</b> Actívala para poder rendir.</div>
+              <div *ngIf="vm.proctoringError" style="margin-top: 10px">
+                {{ vm.proctoringError }}
+              </div>
+              <button
+                class="btn btn-neutral btn-sm"
+                style="margin-top: 12px"
+                (click)="ensureProctoringStarted()"
+              >
+                Activar cámara
+              </button>
+            </div>
+
+            <ng-container *ngIf="!vm.suspended && (!vm.proctoringRequired || vm.proctoringReady)">
+              <div class="question-layout">
+                <div class="question-viewport">
+                  <div class="block-head" *ngIf="vm.currentBloque">
+                    <div class="block-title">
+                      <span class="block-chip">{{ vm.currentBloque?.tipo?.codigo }}</span>
+                      <span>{{ vm.currentBloque?.enunciado }}</span>
+                    </div>
+                    <div class="block-sub" *ngIf="vm.currentBloque?.texto_base">
+                      {{ vm.currentBloque.texto_base }}
+                    </div>
+                    <audio *ngIf="vm.currentBloque?.url_audio" controls class="audio-player">
+                      <source [src]="vm.currentBloque.url_audio" />
+                    </audio>
+                  </div>
+
+                  <app-rendir-pregunta
+                    [pregunta]="vm.currentPregunta"
+                    [estado]="getState(vm.currentPregunta?.id_pregunta)"
+                    [id_intento]="vm.id_intento"
+                    (save)="onSavePregunta($event)"
+                  ></app-rendir-pregunta>
+                </div>
+
+                <div class="question-footer">
+                  <div class="eval-nav">
+                    <button
+                      class="btn btn-ghost"
+                      (click)="prev()"
+                      [disabled]="vm.isFirst || vm.finalizando"
+                    >
+                      Anterior
+                    </button>
+                    <button
+                      class="btn btn-neutral"
+                      (click)="next()"
+                      *ngIf="!vm.isLast"
+                      [disabled]="vm.finalizando"
+                    >
+                      Siguiente
+                    </button>
+                    <button
+                      class="btn btn-success"
+                      (click)="openFinalizarModal()"
+                      *ngIf="vm.isLast"
+                      [disabled]="vm.finalizando"
+                    >
+                      Finalizar
+                    </button>
+                  </div>
+
+                  <div class="jump" *ngIf="vm.total > 1">
+                    <button
+                      class="jump-dot"
+                      type="button"
+                      *ngFor="let j of vm.jump"
+                      [class.current]="j.current"
+                      [class.answered]="j.answered"
+                      (click)="goTo(j.i)"
+                      [disabled]="vm.finalizando"
+                      aria-label="Ir a pregunta {{ j.label }}"
+                      title="Pregunta {{ j.label }}"
+                    >
+                      {{ j.label }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+
+          <ng-container *ngIf="!vm.loading && !vm.total && !vm.errorMessage">
+            <div class="alert alert-warning">No se encontraron preguntas para este intento.</div>
+          </ng-container>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+
+  <app-confirmar-finalizar-modal
+    *ngIf="vm.showFinalizarModal"
+    [loading]="vm.finalizando"
+    [error]="vm.errorMessage"
+    (close)="closeFinalizarModal()"
+    (confirm)="finalizar()"
+  ></app-confirmar-finalizar-modal>
+
+  <app-proctoring-warn-modal
+    *ngIf="vm.showWarnModal"
+    [warnings]="vm.warnings"
+    (entendido)="closeWarnModal()"
+  ></app-proctoring-warn-modal>
+</ng-container>

@@ -1,0 +1,138 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <div class="page">
+    <app-breadcrumbs [labelMap]="vm.labelMap"></app-breadcrumbs>
+
+    <div class="header">
+      <div>
+        <h1 class="title">{{ vm.curso?.nombre || 'Curso' }}</h1>
+      </div>
+
+      <button
+        *ngIf="vm.canCreateEval"
+        class="btn btn-neutral"
+        (click)="crearEvaluacion()"
+        [disabled]="vm.loading"
+      >
+        + Crear evaluación
+      </button>
+    </div>
+
+    <div *ngIf="vm.errorMessage" class="alert alert-error">
+      {{ vm.errorMessage }}
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div *ngIf="vm.loading" class="loading-row">
+          <span class="spinner"></span>
+          <span>Cargando...</span>
+        </div>
+
+        <div *ngIf="!vm.loading">
+          <div class="tabs">
+            <button
+              class="tab"
+              [class.active]="vm.ui.activeTab === 'actividades'"
+              (click)="setTab('actividades')"
+              type="button"
+            >
+              Actividades
+            </button>
+
+            <button
+              class="tab"
+              [class.active]="vm.ui.activeTab === 'calificaciones'"
+              (click)="setTab('calificaciones')"
+              type="button"
+            >
+              Calificaciones
+            </button>
+
+            <button
+              class="tab"
+              [class.active]="vm.ui.activeTab === 'integrantes'"
+              (click)="setTab('integrantes')"
+              type="button"
+            >
+              Integrantes
+            </button>
+          </div>
+
+          <div class="tab-content">
+            <div *ngIf="vm.ui.activeTab === 'actividades'">
+              <div *ngIf="vm.loadingEvals" class="loading-row">
+                <span class="spinner"></span>
+                <span>Cargando evaluaciones...</span>
+              </div>
+
+              <app-evaluaciones-table
+                *ngIf="!vm.loadingEvals"
+                [evaluaciones]="vm.evaluaciones"
+                [canManage]="vm.canCreateEval"
+                (open)="openEvaluacion($event, vm.canCreateEval, vm.id_curso)"
+                (activar)="onActivarEval($event)"
+                (inactivar)="onInactivarEval($event)"
+                (eliminar)="onEliminarEval($event)"
+                (editar)="openEditEvaluacion($event)"
+              />
+            </div>
+
+            <div *ngIf="vm.ui.activeTab === 'calificaciones'">
+              <app-calificaciones-curso-table
+                [mode]="vm.canCreateEval ? 'DOCENTE' : 'ESTUDIANTE'"
+                [studentData]="!vm.canCreateEval ? $any(vm.calificacionesData) : null"
+                [teacherData]="vm.canCreateEval ? $any(vm.calificacionesData) : null"
+                [loading]="vm.loadingCalif"
+                [error]="vm.califError"
+                (openIntento)="onOpenIntento($event)"
+              ></app-calificaciones-curso-table>
+            </div>
+
+            <div *ngIf="vm.ui.activeTab === 'integrantes'">
+              <div *ngIf="vm.loadingIntegrantes" class="loading-row">
+                <span class="spinner"></span>
+                <span>Cargando integrantes...</span>
+              </div>
+
+              <app-curso-usuarios-table
+                *ngIf="!vm.loadingIntegrantes"
+                [usuarios]="vm.integrantes"
+                [isAdmin]="false"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <app-crear-evaluacion-modal
+      *ngIf="vm.ui.createEvalOpen"
+      [id_curso]="vm.id_curso"
+      (close)="closeCreateEvaluacion()"
+      (created)="onCreatedEvaluacion()"
+    />
+  </div>
+
+  <app-editar-evaluacion-modal
+    *ngIf="vm.ui.editEvalOpen"
+    [evaluacion]="vm.ui.selectedEvalToEdit"
+    (close)="closeEditEvaluacion()"
+    (updated)="onUpdatedEvaluacion()"
+  />
+
+  <app-confirmar-rendir-modal
+    *ngIf="vm.ui.rend.rendirOpen"
+    [info$]="rendirInfo$"
+    [loading]="vm.rendInfo.rendirLoading"
+    [error]="vm.rendInfo.rendirError"
+    (close)="closeRendir()"
+    (confirm)="confirmRendir()"
+  />
+
+  <app-revision-intento-modal
+    *ngIf="vm.ui.revisionOpen && vm.ui.selectedIntentoId"
+    [idIntento]="vm.ui.selectedIntentoId"
+    (close)="closeRevision()"
+    (changed)="onRevisionChanged()"
+  ></app-revision-intento-modal>
+</ng-container>

@@ -1,0 +1,4 @@
+.layout-content {
+  min-height: calc(100vh - 320px);
+  padding-top: var(--nav-h); /* ahora solo aplica donde existe navbar */
+}

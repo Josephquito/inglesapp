@@ -1,0 +1,162 @@
+<div class="q">
+  <div class="q-head">
+    <div class="q-title">
+      <span class="q-chip">{{ tipoCodigo() }}</span>
+      <span class="q-text">{{ pregunta?.texto }}</span>
+    </div>
+  </div>
+
+  <div *ngIf="estado?.error" class="q-error">{{ estado.error }}</div>
+
+  <!-- ✅ MEDIA (robusto) -->
+  <div class="q-media" *ngIf="pregunta?.url_multimedia as mediaUrl">
+    <!-- Imagen -->
+    <img
+      *ngIf="mediaMode === 'image'"
+      class="media-img"
+      [src]="mediaUrl"
+      alt="Recurso de la pregunta"
+      loading="lazy"
+      (error)="onImgError()"
+    />
+
+    <!-- Video -->
+    <video
+      *ngIf="mediaMode === 'video'"
+      class="media-video"
+      controls
+      playsinline
+      preload="metadata"
+      (error)="onVideoError()"
+    >
+      <source [src]="mediaUrl" />
+      Tu navegador no soporta este formato de video.
+    </video>
+
+    <!-- Link fallback -->
+    <a
+      *ngIf="mediaMode === 'link'"
+      class="media-link"
+      [href]="mediaUrl"
+      target="_blank"
+      rel="noopener"
+    >
+      Abrir recurso multimedia
+    </a>
+
+    <!-- Mensajito opcional si cae a link -->
+    <div *ngIf="mediaMode === 'link'" class="media-note">
+      Si no se reproduce aquí, el formato del video puede no ser compatible con Chrome.
+    </div>
+  </div>
+
+  <!-- WRITING -->
+  <div *ngIf="tipoCodigo() === 'WRITING'" class="q-body">
+    <textarea
+      class="textarea"
+      [(ngModel)]="respuestaTexto"
+      (ngModelChange)="onTextoChange()"
+      placeholder="Escribe tu respuesta..."
+      rows="4"
+    ></textarea>
+  </div>
+
+  <!-- MULTIPLE_CHOICE -->
+  <div *ngIf="tipoCodigo() === 'MULTIPLE_CHOICE'" class="q-body">
+    <div class="options">
+      <label class="opt" *ngFor="let o of pregunta?.opcionesRespuesta || []">
+        <input
+          type="radio"
+          name="opt_{{ pregunta?.id_pregunta }}"
+          [value]="o.id_opcion"
+          [checked]="opcionSeleccionada === o.id_opcion"
+          (change)="onOpcionChange(o.id_opcion)"
+        />
+        <span>{{ o.texto }}</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- MATCHING -->
+  <div *ngIf="tipoCodigo() === 'MATCHING'" class="q-body">
+    <div class="matching">
+      <div class="row" *ngFor="let par of pregunta?.emparejamientos || []">
+        <div class="left">{{ par.izquierda }}</div>
+        <select class="select" (change)="onMatchingChange(par.izquierda, $event)">
+          <option value="">Selecciona...</option>
+          <option *ngFor="let d of pregunta?.emparejamientos || []" [value]="d.derecha">
+            {{ d.derecha }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SPEAKING -->
+  <div *ngIf="tipoCodigo() === 'SPEAKING'" class="q-body">
+    <div class="speaking">
+      <div class="hint">Graba tu respuesta. Al detener se guardará automáticamente.</div>
+
+      <div class="rec-row">
+        <button
+          class="rec-btn rec-start"
+          type="button"
+          (click)="startRecording()"
+          [disabled]="recording || uploading"
+        >
+          Grabar
+        </button>
+
+        <button
+          class="rec-btn rec-stop"
+          type="button"
+          (click)="stopRecording()"
+          [disabled]="!recording"
+        >
+          Detener
+        </button>
+
+        <button
+          class="rec-btn rec-clear"
+          type="button"
+          (click)="retry()"
+          [disabled]="recording || uploading"
+        >
+          Reintentar
+        </button>
+
+        <span class="rec-timer" *ngIf="recording">{{ recTimeText }}</span>
+        <span class="rec-uploading" *ngIf="uploading">Guardando...</span>
+        <span class="rec-error" *ngIf="recError">{{ recError }}</span>
+      </div>
+
+      <!-- Preview mientras sube -->
+      <audio *ngIf="previewUrl" class="audio" controls>
+        <source [src]="previewUrl" />
+      </audio>
+
+      <!-- Audio definitivo -->
+      <audio
+        *ngIf="!previewUrl && (finalUrl || pregunta?.url_audio)"
+        class="audio"
+        controls
+        [attr.data-k]="audioKey"
+      >
+        <source [src]="finalUrl || pregunta?.url_audio" />
+      </audio>
+    </div>
+  </div>
+
+  <!-- Otros -->
+  <div
+    *ngIf="
+      tipoCodigo() !== 'WRITING' &&
+      tipoCodigo() !== 'MULTIPLE_CHOICE' &&
+      tipoCodigo() !== 'MATCHING' &&
+      tipoCodigo() !== 'SPEAKING'
+    "
+    class="q-body"
+  >
+    <div class="hint">Tipo aún no renderizado en el front: {{ tipoCodigo() }}.</div>
+  </div>
+</div>

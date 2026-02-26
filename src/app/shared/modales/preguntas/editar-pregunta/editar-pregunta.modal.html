@@ -1,0 +1,354 @@
+<div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+<div class="modal" role="dialog" aria-modal="true">
+  <!-- HEADER STICKY -->
+  <div class="modal-header">
+    <div class="title-wrap">
+      <h2 class="modal-title">
+        {{ isBloque() ? 'Editar bloque' : 'Editar pregunta' }}
+      </h2>
+      <p class="modal-subtitle">
+        {{
+          isBloque()
+            ? 'Edita el recurso base y sus subpreguntas.'
+            : 'Edita el enunciado y campos según el tipo.'
+        }}
+      </p>
+    </div>
+
+    <button class="x" type="button" (click)="close.emit()" aria-label="Cerrar">✕</button>
+  </div>
+
+  <div *ngIf="error" class="modal-error">{{ error }}</div>
+
+  <!-- BODY SCROLL -->
+  <div class="modal-body">
+    <!-- ✅ opcional: estado cargando -->
+    <div class="hint" *ngIf="loading">Cargando…</div>
+
+    <!-- SECCIÓN: Tipo -->
+    <div class="section">
+      <div class="grid">
+        <div class="field" style="grid-column: 1 / -1">
+          <label>Tipo de pregunta *</label>
+
+          <input type="text" [value]="tipoSel?.label || 'Tipo no disponible'" disabled />
+
+          <div class="hint" style="margin-top: 6px">
+            Cambiar el tipo puede resetear campos (igual que en crear).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="tipoSel">
+      <!-- ========================= -->
+      <!-- PREGUNTA SUELTA -->
+      <!-- ========================= -->
+      <ng-container *ngIf="!isBloque()">
+        <div class="section">
+          <div class="grid">
+            <div class="field" style="grid-column: 1 / -1">
+              <label>Enunciado *</label>
+              <textarea
+                [(ngModel)]="form.texto"
+                rows="3"
+                placeholder="Escribe el enunciado, pregunta u orden"
+              ></textarea>
+            </div>
+
+            <div class="field" style="grid-column: 1 / -1">
+              <label>Recurso multimedia (opcional)</label>
+
+              <div class="upload-row">
+                <input
+                  type="text"
+                  [(ngModel)]="form.url_multimedia"
+                  placeholder="https://... o sube un archivo"
+                />
+
+                <input
+                  #filePregunta
+                  type="file"
+                  hidden
+                  accept="image/*,audio/*,video/*"
+                  (change)="
+                    subirMultimediaPregunta(filePregunta.files?.item(0) || null);
+                    filePregunta.value = ''
+                  "
+                />
+
+                <button
+                  class="btn btn-ghost btn-sm"
+                  type="button"
+                  (click)="filePregunta.click()"
+                  [disabled]="uploading"
+                >
+                  {{ uploading ? 'Subiendo...' : 'Subir' }}
+                </button>
+              </div>
+
+              <div class="hint" *ngIf="form.url_multimedia">
+                Se guardará la URL actual tal como está.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WRITING -->
+        <div class="section" *ngIf="showWriting()">
+          <div class="grid">
+            <div class="field" style="grid-column: 1 / -1">
+              <label>Respuesta esperada (opcional)</label>
+              <input type="text" [(ngModel)]="form.respuesta_esperada" placeholder="Ej: apple" />
+              <div class="hint">Dejar vacío si es una pregunta abierta</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SPEAKING -->
+        <div class="section" *ngIf="showSpeaking()">
+          <div class="callout">
+            <div class="callout-title">Speaking</div>
+            <div class="callout-text">
+              El estudiante grabará su voz; esta pregunta se califica manualmente.
+            </div>
+          </div>
+        </div>
+
+        <!-- MULTIPLE CHOICE -->
+        <div class="section" *ngIf="showMC()">
+          <div class="section-head">
+            <div>
+              <div class="section-title">Opciones</div>
+              <div class="section-hint">Mínimo 2. Marca al menos 1 correcta.</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" type="button" (click)="addOpcion()">
+              + Opción
+            </button>
+          </div>
+
+          <div class="list">
+            <div class="row-card" *ngFor="let op of form.opcionesRespuesta; let i = index">
+              <div class="row-main">
+                <input type="text" [(ngModel)]="op.texto" placeholder="Texto de la opción..." />
+              </div>
+
+              <label class="chip-check">
+                <input type="checkbox" [(ngModel)]="op.es_correcta" />
+                <span>Correcta</span>
+              </label>
+
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                (click)="removeOpcion(i)"
+                [disabled]="form.opcionesRespuesta.length <= 2"
+              >
+                Quitar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MATCHING -->
+        <div class="section" *ngIf="showMatching()">
+          <div class="section-head">
+            <div>
+              <div class="section-title">Emparejar</div>
+              <div class="section-hint">Mínimo 2 pares.</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" type="button" (click)="addPar()">+ Par</button>
+          </div>
+
+          <div class="list">
+            <div class="row-card row-2" *ngFor="let par of form.emparejamientos; let i = index">
+              <input type="text" [(ngModel)]="par.izquierda" placeholder="Pregunta o palabra" />
+              <input type="text" [(ngModel)]="par.derecha" placeholder="Respuesta" />
+
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                (click)="removePar(i)"
+                [disabled]="form.emparejamientos.length <= 2"
+              >
+                Quitar
+              </button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ========================= -->
+      <!-- BLOQUE + SUBPREGUNTAS -->
+      <!-- ========================= -->
+      <ng-container *ngIf="isBloque()">
+        <div class="section">
+          <div class="callout">
+            <div class="callout-title">
+              Bloque: edita el recurso base y luego sus subpreguntas de opción múltiple.
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top: 12px">
+            <div class="field" style="grid-column: 1 / -1">
+              <label>Enunciado del bloque *</label>
+              <textarea
+                [(ngModel)]="form.bloque_enunciado"
+                rows="3"
+                placeholder="Ej: Escucha / Lee y responde..."
+              ></textarea>
+            </div>
+
+            <!-- LISTENING -->
+            <div class="field" style="grid-column: 1 / -1" *ngIf="isListening()">
+              <label>Audio *</label>
+              <div class="upload-row">
+                <input type="text" [(ngModel)]="form.url_audio" placeholder="https://..." />
+
+                <input
+                  #fileAudio
+                  type="file"
+                  hidden
+                  accept="audio/*"
+                  (change)="
+                    subirAudioBloque(fileAudio.files?.item(0) || null); fileAudio.value = ''
+                  "
+                />
+
+                <button
+                  class="btn btn-ghost btn-sm"
+                  type="button"
+                  (click)="fileAudio.click()"
+                  [disabled]="uploading"
+                >
+                  {{ uploading ? 'Subiendo...' : 'Subir audio' }}
+                </button>
+              </div>
+              <div class="hint">Debe ser una URL válida o subir un archivo.</div>
+            </div>
+
+            <!-- READING -->
+            <div class="field" style="grid-column: 1 / -1" *ngIf="isReading()">
+              <label>Texto base *</label>
+              <textarea
+                [(ngModel)]="form.texto_base"
+                rows="7"
+                placeholder="Pega aquí el texto de lectura..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBPREGUNTAS -->
+        <div class="section">
+          <div class="section-head">
+            <div>
+              <div class="section-title">Subpreguntas</div>
+              <div class="section-hint">Cada subpregunta requiere 2+ opciones y 1 correcta.</div>
+            </div>
+
+            <button class="btn btn-ghost btn-sm" type="button" (click)="addSubpregunta()">
+              + Subpregunta
+            </button>
+          </div>
+
+          <div class="sub-list">
+            <div class="sub-card" *ngFor="let sp of form.subpreguntas; let i = index">
+              <div class="sub-head">
+                <div class="sub-title">
+                  Subpregunta {{ i + 1 }}
+
+                  <span class="pill" *ngIf="!sp.id_pregunta">Nueva</span>
+                </div>
+
+                <button
+                  class="btn btn-ghost btn-sm"
+                  type="button"
+                  (click)="removeSubpregunta(i)"
+                  [disabled]="form.subpreguntas.length <= 1"
+                >
+                  Quitar
+                </button>
+              </div>
+
+              <div class="grid">
+                <div class="field" style="grid-column: 1 / -1">
+                  <label>Enunciado *</label>
+                  <textarea
+                    [(ngModel)]="sp.texto"
+                    rows="2"
+                    placeholder="Escribe la subpregunta..."
+                  ></textarea>
+                </div>
+              </div>
+
+              <div class="section-head" style="margin-top: 10px">
+                <div>
+                  <div class="section-title" style="font-size: 0.95rem">Opciones</div>
+                  <div class="section-hint">Mínimo 2. Marca 1+ correcta.</div>
+                </div>
+
+                <button class="btn btn-ghost btn-sm" type="button" (click)="addSubOpcion(i)">
+                  + Opción
+                </button>
+              </div>
+
+              <div class="list">
+                <div class="row-card" *ngFor="let op of sp.opcionesRespuesta; let j = index">
+                  <div class="row-main">
+                    <input type="text" [(ngModel)]="op.texto" placeholder="Texto de la opción..." />
+                  </div>
+
+                  <label class="chip-check">
+                    <input type="checkbox" [(ngModel)]="op.es_correcta" />
+                    <span>Correcta</span>
+                  </label>
+
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    (click)="removeSubOpcion(i, j)"
+                    [disabled]="sp.opcionesRespuesta.length <= 2"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="hint">
+            Al guardar, se actualiza el bloque y se sincronizan subpreguntas: nuevas se crean,
+            existentes se actualizan, y las quitadas se eliminan.
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+  </div>
+
+  <!-- FOOTER STICKY -->
+  <div class="modal-footer">
+    <div class="footer-left">
+      <span class="pill" *ngIf="tipoSel">{{ tipoSel.label }}</span>
+      <span class="muted" *ngIf="uploading">Subiendo archivo…</span>
+    </div>
+
+    <div class="footer-right">
+      <button class="btn btn-ghost" type="button" (click)="close.emit()" [disabled]="loading">
+        Cancelar
+      </button>
+
+      <button
+        class="btn btn-neutral"
+        type="button"
+        (click)="submit()"
+        [disabled]="loading || !tipoSel"
+      >
+        {{ loading ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </div>
+</div>

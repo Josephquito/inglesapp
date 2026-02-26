@@ -1,0 +1,127 @@
+<div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+<div class="modal" role="dialog" aria-modal="true">
+  <div class="modal-header">
+    <div>
+      <h2 class="modal-title">Crear usuario</h2>
+      <p class="modal-subtitle">Registra un usuario nuevo en el sistema.</p>
+    </div>
+    <button class="x" type="button" (click)="close.emit()">✕</button>
+  </div>
+
+  <div *ngIf="error" class="modal-error">{{ error }}</div>
+  <div *ngIf="success" class="modal-success">{{ success }}</div>
+
+  <div class="modal-body">
+    <form (ngSubmit)="submit()" autocomplete="off">
+      <div class="grid">
+        <!-- ENTIDAD -->
+        <div class="field" *ngIf="isAdmin(); else entidadFija">
+          <label>Entidad</label>
+          <select [(ngModel)]="form.id_entidad" name="id_entidad">
+            <option [ngValue]="0">Seleccione una entidad</option>
+            <option *ngFor="let e of entidades" [ngValue]="Number(e.value)">
+              {{ e.label }}
+            </option>
+          </select>
+          <div class="field-meta">
+            <span class="help"> </span>
+            <!-- espacio reservado -->
+          </div>
+        </div>
+
+        <ng-template #entidadFija>
+          <div class="field">
+            <label>Entidad</label>
+            <input type="text" [value]="perfil?.entidad?.nombre_comercial || ''" disabled />
+            <div class="field-meta"><span class="help"> </span></div>
+          </div>
+        </ng-template>
+
+        <!-- IDENTIFICACIÓN -->
+        <div class="field">
+          <label>Identificación</label>
+          <input
+            type="text"
+            name="identificacion"
+            [ngModel]="form.identificacion"
+            (ngModelChange)="onIdentificacionInput($event)"
+            (blur)="onIdentificacionBlur()"
+            inputmode="numeric"
+            pattern="\d*"
+            maxlength="10"
+            required
+          />
+          <div class="field-meta">
+            <span *ngIf="identificacionError" class="field-error">{{ identificacionError }}</span>
+            <span *ngIf="!identificacionError" class="help"> </span>
+          </div>
+        </div>
+
+        <!-- NOMBRES -->
+        <div class="field">
+          <label>Nombres</label>
+          <input
+            type="text"
+            name="nombres"
+            [ngModel]="form.nombres"
+            (ngModelChange)="onInputNombreCampo('nombres', $event)"
+            required
+          />
+          <div class="field-meta"><span class="help"> </span></div>
+        </div>
+
+        <!-- APELLIDOS -->
+        <div class="field">
+          <label>Apellidos</label>
+          <input
+            type="text"
+            name="apellidos"
+            [ngModel]="form.apellidos"
+            (ngModelChange)="onInputNombreCampo('apellidos', $event)"
+            required
+          />
+          <div class="field-meta"><span class="help"> </span></div>
+        </div>
+
+        <!-- EMAIL -->
+        <div class="field">
+          <label>Email</label>
+          <input type="email" name="email" [(ngModel)]="form.email" required />
+          <div class="field-meta"><span class="help"> </span></div>
+        </div>
+
+        <!-- ROL -->
+        <div class="field" *ngIf="isAdmin(); else rolFijo">
+          <label>Rol</label>
+          <select [(ngModel)]="form.rol" name="rol" required>
+            <option [ngValue]="''">Seleccione un rol</option>
+            <option *ngFor="let r of roles" [ngValue]="Number(r.value)">
+              {{ r.label }}
+            </option>
+          </select>
+          <div class="field-meta"><span class="help"> </span></div>
+        </div>
+
+        <ng-template #rolFijo>
+          <div class="field">
+            <label>Rol</label>
+            <input
+              type="text"
+              [value]="perfil?.rol?.nombre || perfil?.rol?.codigo || ''"
+              disabled
+            />
+            <div class="field-meta"><span class="help"> </span></div>
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-neutral" type="submit" [disabled]="loading || !!identificacionError">
+          {{ loading ? 'Creando...' : 'Crear usuario' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="close.emit()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>

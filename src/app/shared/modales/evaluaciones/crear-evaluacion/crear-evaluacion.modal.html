@@ -1,0 +1,74 @@
+<div class="modal-backdrop" (click)="onBackdrop($event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Crear evaluación</h3>
+      <button class="btn btn-ghost btn-sm" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+
+      <label class="field">
+        <span class="label">Título *</span>
+        <input class="input" [(ngModel)]="form.titulo" placeholder="Ej: Evaluación 1" />
+      </label>
+
+      <label class="field">
+        <span class="label">Descripción</span>
+        <textarea
+          class="textarea"
+          [(ngModel)]="form.descripcion"
+          rows="3"
+          placeholder="Opcional (máx. 500)"
+        ></textarea>
+      </label>
+
+      <div class="grid-2">
+        <!-- ✅ Permitir más intentos (reemplaza tiene_intentos) -->
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="form.permitir_mas_intentos" />
+          <span>Permitir más intentos</span>
+        </label>
+
+        <label class="field" *ngIf="form.permitir_mas_intentos">
+          <span class="label">Cantidad de intentos</span>
+          <input class="input" type="number" min="2" [(ngModel)]="form.intentos" />
+        </label>
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="form.tiene_tiempo" />
+          <span>Tiene tiempo</span>
+        </label>
+
+        <label class="field" *ngIf="form.tiene_tiempo">
+          <span class="label">Minutos</span>
+          <input class="input" type="number" min="0" [(ngModel)]="form.minutos" />
+        </label>
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="form.valida_fraude" />
+          <span>Valida fraude</span>
+        </label>
+
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="form.usa_camara" />
+          <span>Usa cámara</span>
+        </label>
+      </div>
+
+      <div class="hint">
+        La evaluación se crea <b>INACTIVA</b>. Ativala para poder rendir la evalucaión.
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" (click)="close.emit()" [disabled]="loading">Cancelar</button>
+
+      <button class="btn btn-neutral" (click)="submit()" [disabled]="loading">
+        {{ loading ? 'Creando...' : 'Crear' }}
+      </button>
+    </div>
+  </div>
+</div>

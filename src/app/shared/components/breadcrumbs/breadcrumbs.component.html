@@ -1,0 +1,16 @@
+<nav class="crumbs" *ngIf="crumbs.length">
+  <span class="crumb name">Ruta: </span>
+  <a class="crumb" routerLink="/mis-cursos">Mis cursos</a>
+
+  <ng-container *ngFor="let c of crumbs; let last = last">
+    <span class="sep">/</span>
+
+    <a *ngIf="!last" class="crumb" [routerLink]="c.url">
+      {{ c.label }}
+    </a>
+
+    <span *ngIf="last" class="crumb current">
+      {{ c.label }}
+    </span>
+  </ng-container>
+</nav>

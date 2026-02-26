@@ -1,0 +1,61 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Estudiante</th>
+        <th class="col-sm">Intento</th>
+        <th class="col-sm">Puntaje</th>
+        <th class="col-md">Estado</th>
+        <th class="text-right col-md">Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr
+        *ngFor="let it of intentos"
+        class="row-click"
+        (click)="open.emit(it)"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="open.emit(it)"
+        (keydown.space)="open.emit(it)"
+        [attr.aria-label]="'Abrir intento de ' + nombre(it)"
+      >
+        <td>
+          <div class="student">
+            <div class="student__name">{{ nombre(it) }}</div>
+            <div class="student__meta">
+              {{ it?.estudiante?.email || '—' }}
+            </div>
+          </div>
+        </td>
+
+        <td class="mono muted">#{{ it?.numero_intento || 1 }}</td>
+
+        <td class="score">
+          <span class="mono">{{ it?.puntaje_total ?? 0 }}</span>
+        </td>
+
+        <td>
+          <span class="badge" [ngClass]="badgeClass(it)">
+            <span class="dot" aria-hidden="true"></span>
+            {{ estadoLabel(it) }}
+          </span>
+        </td>
+
+        <td class="text-right">
+          <button class="btn btn-primary btn-sm" (click)="onOpenClick($event, it)">Revisar</button>
+        </td>
+      </tr>
+
+      <tr *ngIf="!intentos.length">
+        <td class="empty" colspan="5">
+          <div class="empty-box">
+            <div class="empty-title">No hay intentos entregados</div>
+            <div class="empty-sub">Cuando un estudiante envíe su intento, aparecerá aquí.</div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

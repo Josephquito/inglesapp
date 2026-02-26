@@ -1,0 +1,43 @@
+<div class="modal-backdrop" (click)="onBackdrop($event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Advertencia de seguridad</h3>
+
+      <!-- opcional: si quieres permitir cerrar con X -->
+      <!--
+      <button class="icon-btn" type="button" (click)="entendido.emit()">✕</button>
+      -->
+    </div>
+
+    <div class="modal-body">
+      <div class="alert alert-error">
+        <div class="info-title">Se detectó un cambio de pestaña o ventana</div>
+
+        <p class="info-sub">
+          Las reglas de la evaluación prohíben salir de la pantalla del examen. Esta acción ha sido
+          registrada en el sistema.
+        </p>
+
+        <div class="stats-box">
+          <div class="count-item">
+            <span class="count-label">Advertencias:</span>
+            <span class="count-value" [class.text-danger]="warnings >= 2">
+              {{ warnings }} / 3
+            </span>
+          </div>
+        </div>
+
+        <div class="warn-footer-msg" *ngIf="warnings < 3">
+          Al llegar a la <strong>tercera advertencia</strong>, tu examen será bloqueado y enviado
+          automáticamente.
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-neutral" type="button" (click)="entendido.emit()">
+        He leído y acepto continuar
+      </button>
+    </div>
+  </div>
+</div>

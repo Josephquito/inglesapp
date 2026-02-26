@@ -1,0 +1,55 @@
+<div class="login-page">
+  <div class="login-card">
+    <img src="logo_login.png" alt="Logo" class="login-logo" />
+
+    <h2 class="login-title">Iniciar Sesión</h2>
+
+    <form
+      (ngSubmit)="login($event)"
+      novalidate
+      [class.opacity-70]="loading"
+      [attr.aria-busy]="loading"
+    >
+      <div *ngIf="error" class="error-box">
+        <span>{{ error }}</span>
+        <button type="button" class="error-close" (click)="error = null">✕</button>
+      </div>
+
+      <input
+        class="login-input"
+        name="username"
+        [(ngModel)]="username"
+        placeholder="Usuario"
+        [disabled]="loading"
+        autocomplete="username"
+      />
+
+      <div class="password-wrapper">
+        <input
+          class="login-input"
+          name="password"
+          [type]="showPassword ? 'text' : 'password'"
+          [(ngModel)]="password"
+          placeholder="Contraseña"
+          [disabled]="loading"
+          autocomplete="current-password"
+        />
+
+        <button
+          type="button"
+          class="toggle-password"
+          (click)="showPassword = !showPassword"
+          [disabled]="loading"
+          aria-label="Mostrar u ocultar contraseña"
+        >
+          <i class="pi" [ngClass]="showPassword ? 'pi-eye' : 'pi-eye-slash'"></i>
+        </button>
+      </div>
+
+      <button class="login-button" type="submit" [disabled]="loading">
+        <span *ngIf="!loading">Iniciar sesión</span>
+        <span *ngIf="loading">Iniciando...</span>
+      </button>
+    </form>
+  </div>
+</div>

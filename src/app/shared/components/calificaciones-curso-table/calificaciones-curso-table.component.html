@@ -1,0 +1,113 @@
+<div class="table-wrap">
+  <div *ngIf="loading" class="loading-row">
+    <span class="spinner"></span>
+    <span>Cargando calificaciones...</span>
+  </div>
+
+  <div *ngIf="!loading && error" class="alert alert-error">
+    {{ error }}
+  </div>
+
+  <!-- ===================== -->
+  <!-- MODO ESTUDIANTE -->
+  <!-- ===================== -->
+  <ng-container *ngIf="!loading && !error && mode === 'ESTUDIANTE'">
+    <table class="table" *ngIf="(studentData?.evaluaciones?.length || 0) > 0; else emptyStudent">
+      <thead>
+        <tr>
+          <th>Evaluación</th>
+          <th>Estado</th>
+          <th class="text-right">Nota</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let e of studentData?.evaluaciones" class="row-clickable">
+          <td>
+            <div class="cell">
+              <div class="name font-medium">{{ e.titulo }}</div>
+            </div>
+          </td>
+
+          <td>
+            <span [class]="badgeClass(e.estado_calificacion)">
+              {{ badgeText(e.estado_calificacion) }}
+            </span>
+          </td>
+
+          <td class="text-right">
+            <span *ngIf="e.intento_visible; else noNota">
+              {{ fmt(e.intento_visible.calificacion) }}
+            </span>
+            <ng-template #noNota>—</ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyStudent>
+      <div class="empty">Aún no hay evaluaciones en este curso.</div>
+    </ng-template>
+  </ng-container>
+
+  <!-- ===================== -->
+  <!-- MODO DOCENTE/ADMIN -->
+  <!-- ===================== -->
+  <ng-container *ngIf="!loading && !error && mode === 'DOCENTE'">
+    <table class="table" *ngIf="(teacherData?.estudiantes?.length || 0) > 0; else emptyTeacher">
+      <thead>
+        <tr>
+          <th>Estudiante</th>
+
+          <th *ngFor="let ev of teacherData?.evaluaciones" class="text-right">
+            {{ ev.titulo }}
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let est of teacherData?.estudiantes">
+          <td>
+            <div class="cell">
+              <div class="name font-medium">{{ est.apellidos }} {{ est.nombres }}</div>
+              <div class="desc">{{ est.email }}</div>
+            </div>
+          </td>
+
+          <!-- columnas por evaluación -->
+          <td *ngFor="let ev of teacherData?.evaluaciones" class="text-right">
+            <ng-container *ngIf="cellFor(est, ev.id_evaluacion) as cell">
+              <div class="td-stack">
+                <div>
+                  <span [class]="badgeClass(cell.estado_calificacion)">
+                    {{ badgeText(cell.estado_calificacion) }}
+                  </span>
+                </div>
+
+                <div class="score-row" *ngIf="cell?.intento_visible; else noEntregado">
+                  <span class="font-medium">{{ fmt(cell.intento_visible?.calificacion) }}</span>
+
+                  <button
+                    class="btn btn-mini"
+                    type="button"
+                    (click)="openIntento.emit(cell.intento_visible.id_intento)"
+                  >
+                    Ver
+                  </button>
+                </div>
+
+                <ng-template #noEntregado>
+                  <div class="desc">—</div>
+                </ng-template>
+              </div>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyTeacher>
+      <div class="empty">No hay estudiantes activos en este curso.</div>
+    </ng-template>
+  </ng-container>
+</div>

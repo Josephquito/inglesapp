@@ -1,0 +1,73 @@
+<div class="page">
+  <div class="header">
+    <div>
+      <h1 class="title">Entidad</h1>
+      <p class="subtitle">Crea y administra las entidades del sistema.</p>
+    </div>
+
+    <button class="btn btn-neutral" (click)="openCreate()">Crear entidad</button>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div *ngIf="loading" class="loading-row">
+        <span class="spinner"></span>
+        <span>Cargando entidades...</span>
+      </div>
+
+      <div *ngIf="!loading" class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre comercial</th>
+              <th>RUC</th>
+              <th>Razón social</th>
+              <th>Dirección</th>
+              <th>Activo</th>
+              <th class="text-right">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let e of entidades">
+              <td class="font-medium">{{ e.nombre_comercial }}</td>
+              <td>{{ e.ruc }}</td>
+              <td>{{ e.razon_social }}</td>
+              <td>{{ e.direccion }}</td>
+              <td>
+                <span [class]="badgeClass(!!e.activo)">
+                  {{ e.activo ? 'ACTIVO' : 'INACTIVO' }}
+                </span>
+              </td>
+              <td class="text-right">
+                <button class="btn btn-ghost btn-sm" (click)="openEdit(e)">Editar</button>
+              </td>
+            </tr>
+
+            <tr *ngIf="entidades.length === 0">
+              <td colspan="6" class="empty">No hay entidades registradas.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales -->
+  <app-create-entidad-modal
+    [open]="createOpen"
+    (close)="closeAll()"
+    (created)="onCreated()"
+  ></app-create-entidad-modal>
+
+  <app-edit-entidad-modal
+    [open]="editOpen"
+    [entidad]="selected"
+    (close)="closeAll()"
+    (updated)="onUpdated()"
+  ></app-edit-entidad-modal>
+</div>

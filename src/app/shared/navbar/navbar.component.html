@@ -1,0 +1,47 @@
+<header
+  class="nav-wrap"
+  [class.nav-wrap--visible]="navVisible"
+  [class.nav-wrap--hidden]="!navVisible"
+>
+  <p-menubar>
+    <ng-template pTemplate="start">
+      <!-- ✅ tu "home" ahora es mis-cursos -->
+      <img src="logo_navbar.png" alt="Logo" class="logo" routerLink="/mis-cursos" />
+    </ng-template>
+
+    <ng-template pTemplate="end">
+      <div class="actions desktop-only">
+        @for (item of items; track item.label) {
+          <a class="menu-link" [routerLink]="item.routerLink" routerLinkActive="active">
+            {{ item.label }}
+          </a>
+        }
+
+        <a class="menu-link logout-link" (click)="logout()">Cerrar sesión</a>
+      </div>
+
+      <button
+        class="mobile-only hamburger"
+        pButton
+        type="button"
+        icon="pi pi-bars"
+        (click)="toggleMobileMenu()"
+        aria-label="Abrir menú"
+      ></button>
+    </ng-template>
+  </p-menubar>
+</header>
+
+<!-- OVERLAY -->
+<div class="mobile-overlay" [class.open]="mobileOpen" (click)="closeMobileMenu()"></div>
+
+<!-- PANEL MOBILE FULL WIDTH -->
+<div #mobileMenu class="mobile-panel" [class.open]="mobileOpen">
+  @for (item of items; track item.label) {
+    <a class="mobile-link" [routerLink]="item.routerLink" (click)="closeMobileMenu()">
+      {{ item.label }}
+    </a>
+  }
+
+  <a class="mobile-link logout" (click)="logout()">Cerrar sesión</a>
+</div>

@@ -1,0 +1,99 @@
+<div class="modal-backdrop" (click)="onOverlayClick($event)"></div>
+
+<div class="modal" role="dialog" aria-modal="true">
+  <div class="modal-header">
+    <div>
+      <h2 class="modal-title">Editar usuario</h2>
+      <p class="modal-subtitle">Actualiza la información del usuario.</p>
+    </div>
+    <button class="x" type="button" (click)="close.emit()">✕</button>
+  </div>
+
+  <div *ngIf="error" class="modal-error">{{ error }}</div>
+  <div *ngIf="success" class="modal-success">{{ success }}</div>
+
+  <div class="modal-body">
+    <form (ngSubmit)="submit()" autocomplete="off">
+      <div class="grid">
+        <label>
+          Identificación
+          <input type="text" name="identificacion" [(ngModel)]="form.identificacion" />
+        </label>
+
+        <label>
+          Email
+          <input type="text" name="email" [(ngModel)]="form.email" />
+        </label>
+
+        <label>
+          Nombres
+          <input
+            type="text"
+            name="nombres"
+            [ngModel]="form.nombres"
+            (ngModelChange)="onInputNombreCampo('nombres', $event)"
+            required
+          />
+        </label>
+
+        <label>
+          Apellidos
+          <input
+            type="text"
+            name="apellidos"
+            [ngModel]="form.apellidos"
+            (ngModelChange)="onInputNombreCampo('apellidos', $event)"
+            required
+          />
+        </label>
+
+        <label>
+          Username
+          <input
+            type="text"
+            name="username"
+            [(ngModel)]="form.username"
+            (blur)="onUsernameBlur()"
+            required
+          />
+          <span *ngIf="usernameError" class="field-error">{{ usernameError }}</span>
+        </label>
+
+        <label>
+          Entidad
+          <select name="id_entidad" [(ngModel)]="form.id_entidad">
+            <option [ngValue]="null">-- Selecciona --</option>
+            <option *ngFor="let e of entidades" [ngValue]="Number(e.value)">
+              {{ e.label }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          Rol
+          <select name="rol" [(ngModel)]="form.rol">
+            <option [ngValue]="null">-- Selecciona --</option>
+            <option *ngFor="let r of roles" [ngValue]="Number(r.value ?? r.id_rol ?? r.id)">
+              {{ r.label ?? (r.codigo ? r.codigo + ' - ' + r.nombre : r.nombre) }}
+            </option>
+          </select>
+        </label>
+
+        <label>
+          Estado
+          <select name="estado_codigo" [(ngModel)]="form.estado_codigo">
+            <option value="">-- Selecciona --</option>
+            <option *ngFor="let s of estados" [value]="s.value">{{ s.label }}</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-neutral" type="submit" [disabled]="loading || !!usernameError">
+          {{ loading ? 'Guardando...' : 'Guardar cambios' }}
+        </button>
+        <button class="btn btn-ghost" type="button" (click)="close.emit()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>

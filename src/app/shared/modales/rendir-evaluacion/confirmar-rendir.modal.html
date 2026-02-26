@@ -1,0 +1,61 @@
+<div class="modal-backdrop" (click)="onBackdrop($event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Rendir evaluación</h3>
+      <button class="icon-btn" type="button" (click)="close.emit()" [disabled]="loading">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+
+      <ng-container *ngIf="info$ | async as info">
+        <div *ngIf="!info && !error" class="loading-row">
+          <span class="spinner"></span>
+          <span>Cargando condiciones...</span>
+        </div>
+
+        <div *ngIf="info" class="info">
+          <div class="info-title">{{ info.titulo }}</div>
+          <div class="info-sub" *ngIf="info.descripcion">{{ info.descripcion }}</div>
+
+          <div class="chips">
+            <span class="chip"> <strong>Tiempo:</strong>&nbsp;{{ tiempoText(info) }} </span>
+
+            <span class="chip">
+              <strong>{{ intentosText(info) }}</strong>
+            </span>
+          </div>
+
+          <div class="rules">
+            <div class="rule">
+              • Si finalizas o se termina el tiempo, la evaluación queda entregada.
+            </div>
+            <div class="rule">
+              • Puedes finalizar aunque falten respuestas; las no respondidas valen 0.
+            </div>
+            <div class="rule" *ngIf="info.tiene_tiempo">• El contador inicia al comenzar.</div>
+          </div>
+
+          <div class="warn" *ngIf="!info.puede_iniciar">
+            Ya no tienes intentos disponibles para esta evaluación.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-ghost" type="button" (click)="close.emit()" [disabled]="loading">
+            Cancelar
+          </button>
+
+          <button
+            class="btn btn-neutral"
+            type="button"
+            (click)="confirm.emit()"
+            [disabled]="loading || !info?.puede_iniciar"
+          >
+            {{ loading ? 'Iniciando...' : 'Empezar ahora' }}
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
