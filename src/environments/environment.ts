@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000', // <-- tu backend
+  apiUrl: 'https://inglesapi.onrender.com', // <-- tu backend
 };
