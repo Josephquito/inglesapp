@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --configuration production && rm -rf browser && (cp -r dist/front/browser browser 2>/dev/null || cp -r dist/front browser)",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:front": "node dist/front/server/server.mjs"
