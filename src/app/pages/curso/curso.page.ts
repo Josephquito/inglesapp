@@ -145,14 +145,25 @@ export class CursoPage {
       shareReplay(1),
     );
 
-    const perfil$ = defer(() => from(this.authApi.getPerfil())).pipe(
+    // ✅ Perfil (una sola vez por carga) + "gate" de readiness
+    const perfil$ = defer(() => from(this.authApi.getPerfilCached())).pipe(
       catchError(() => of(null)),
       shareReplay(1),
     );
 
-    const curso$ = id$.pipe(
-      switchMap((id) => (id ? defer(() => from(this.api.detalleMiCurso(id))) : of(null))),
-      catchError(() => of(null)),
+    // ✅ Usaremos esto para NO llamar APIs antes de tener auth listo
+    const perfilReady$ = perfil$.pipe(
+      map((p) => p ?? null),
+      shareReplay(1),
+    );
+
+    // ✅ Curso: esperar perfil antes de pedir detalle
+    const curso$ = combineLatest([id$, perfilReady$]).pipe(
+      switchMap(([id, perfil]) => {
+        if (!id) return of(null);
+        if (!perfil) return of(null); // todavía no auth -> no pedir
+        return defer(() => from(this.api.detalleMiCurso(id))).pipe(catchError(() => of(null)));
+      }),
       shareReplay(1),
     );
 
@@ -193,15 +204,16 @@ export class CursoPage {
       shareReplay(1),
     );
 
-    // Calificaciones
+    // ✅ Calificaciones: gate por perfil listo (para evitar primer 401 fantasma)
     const califState$ = combineLatest([
       id$,
-      perfil$,
+      perfilReady$,
       canCreateEval$,
       this.reloadCalif$.pipe(startWith(void 0)),
     ]).pipe(
       switchMap(([id, perfil, isDocente]) => {
-        if (!id || !perfil) return of({ loading: false, data: null, error: '' });
+        if (!id) return of({ loading: false, data: null, error: 'ID inválido.' });
+        if (!perfil) return of({ loading: true, data: null, error: '' }); // aún no auth -> loading sin error
 
         const request = isDocente
           ? this.califApi.calificacionesCursoDocente(id)
@@ -219,13 +231,18 @@ export class CursoPage {
       shareReplay(1),
     );
 
-    // Integrantes
+    // ✅ Integrantes: gate por perfil listo (esto quita el "Error integrantes." al refresh)
     const integrantesState$ = combineLatest([
       id$,
+      perfilReady$,
       this.reloadIntegrantes$.pipe(startWith(void 0)),
     ]).pipe(
-      switchMap(([id]) => {
+      switchMap(([id, perfil]) => {
         if (!id) return of({ loadingIntegrantes: false, integrantes: [], error: 'ID inválido.' });
+
+        // 👇 si aún no hay perfil, NO llamamos API y NO mostramos error
+        if (!perfil) return of({ loadingIntegrantes: true, integrantes: [], error: '' });
+
         return defer(() => from(this.api.obtenerUsuariosCurso(id))).pipe(
           map((lista: any[]) => ({
             loadingIntegrantes: false,
@@ -233,22 +250,26 @@ export class CursoPage {
             error: '',
           })),
           startWith({ loadingIntegrantes: true, integrantes: [], error: '' }),
-          catchError(() =>
-            of({ loadingIntegrantes: false, integrantes: [], error: 'Error integrantes.' }),
-          ),
+          catchError((e) => {
+            const msg = e?.error?.message ?? 'Error integrantes.';
+            return of({ loadingIntegrantes: false, integrantes: [], error: msg });
+          }),
         );
       }),
       shareReplay(1),
     );
 
-    // Evaluaciones
+    // ✅ Evaluaciones: gate por perfil listo
     const evalsState$ = combineLatest([
       id$,
+      perfilReady$,
       canCreateEval$,
       this.reloadEvals$.pipe(startWith(void 0)),
     ]).pipe(
-      switchMap(([id, esDocente]) => {
+      switchMap(([id, perfil, esDocente]) => {
         if (!id) return of({ loadingEvals: false, evaluaciones: [], error: 'ID inválido.' });
+
+        if (!perfil) return of({ loadingEvals: true, evaluaciones: [], error: '' });
 
         const req = esDocente
           ? defer(() => from(this.evalApi.listarPorCursoDocente(id)))
@@ -257,8 +278,12 @@ export class CursoPage {
         return req.pipe(
           map((evs: any[]) => ({ loadingEvals: false, evaluaciones: evs || [], error: '' })),
           startWith({ loadingEvals: true, evaluaciones: [], error: '' }),
-          catchError(() =>
-            of({ loadingEvals: false, evaluaciones: [], error: 'Error evaluaciones.' }),
+          catchError((e) =>
+            of({
+              loadingEvals: false,
+              evaluaciones: [],
+              error: e?.error?.message ?? 'Error evaluaciones.',
+            }),
           ),
         );
       }),
@@ -277,7 +302,15 @@ export class CursoPage {
       rendInfoState$,
     ]).pipe(
       map(([id_curso, perfil, curso, canCreateEval, integ, evs, calif, ui, rendInfo]) => ({
-        loading: !id_curso || !perfil || !curso || integ.loadingIntegrantes || evs.loadingEvals,
+        // ✅ loading: si no hay perfil/curso todavía, mantenemos loading sin explotar error
+        loading:
+          !id_curso ||
+          !perfil ||
+          !curso ||
+          integ.loadingIntegrantes ||
+          evs.loadingEvals ||
+          calif.loading,
+
         errorMessage: integ.error || evs.error || calif.error || '',
         id_curso,
         curso,
@@ -317,12 +350,7 @@ export class CursoPage {
           );
         }),
         tap(async (result: any) => {
-          if (!result?.ok) {
-            // Dejamos el modal abierto; el error de iniciarIntento lo reflejamos como error del rendInfo:
-            // (si quieres separar errores, lo hacemos en un confirmState$ aparte)
-            // Por ahora: mantenemos modal abierto y listo.
-            return;
-          }
+          if (!result?.ok) return;
 
           const current = this.ui$.value;
           this.ui$.next({ ...current, rend: { rendirOpen: false, selectedEvalId: 0 } });
