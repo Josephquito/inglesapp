@@ -14,22 +14,38 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(600px, calc(100vw - 24px));
 
+  width: min(600px, calc(100vw - 24px));
   background: #ffffff;
   border-radius: 15px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  overflow: visible;
+
+  /* ✅ clave responsive: que no se salga del viewport */
+  max-height: calc(100dvh - 24px);
+
+  /* el scroll lo hacemos dentro */
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
 }
 
 /* ===== HEADER ===== */
 .modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
+
   padding: 16px 18px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+  /* ✅ opcional: si el body scrollea, header fijo */
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
 }
 
 .modal-title {
@@ -37,12 +53,14 @@
   font-size: 1.3rem;
   font-weight: 600;
   color: #007485;
+  line-height: 1.2;
 }
 
 .modal-subtitle {
   margin: 6px 0 0;
   font-size: 0.92rem;
   color: #6b7280;
+  line-height: 1.35;
 }
 
 /* Botón cerrar */
@@ -52,17 +70,37 @@
   cursor: pointer;
   font-size: 18px;
   opacity: 0.6;
-  transition: opacity 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.1s ease,
+    background 0.2s ease;
   line-height: 1;
+
+  padding: 6px 8px;
+  border-radius: 10px;
 }
 
 .x:hover {
   opacity: 1;
+  background: rgba(0, 116, 133, 0.08);
+}
+
+.x:active {
+  transform: translateY(1px);
+}
+
+.x:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 116, 133, 0.18);
 }
 
 /* ===== BODY ===== */
 .modal-body {
   padding: 18px;
+
+  /* ✅ el contenido scrollea si es largo */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== ALERTS ===== */
@@ -94,6 +132,11 @@
   gap: 14px;
 }
 
+/* ✅ evita overflow en grid */
+.grid > * {
+  min-width: 0;
+}
+
 /* ===== LABELS ===== */
 label {
   display: grid;
@@ -109,7 +152,8 @@ input[type='email'],
 input[type='password'],
 input[type='date'],
 input:not([type]),
-select {
+select,
+textarea {
   width: 100%;
   padding: 0.75rem 0.9rem;
   border-radius: 10px;
@@ -120,12 +164,37 @@ select {
     border-color 0.2s ease,
     box-shadow 0.2s ease;
   background: #fff;
+  box-sizing: border-box;
 }
 
+/* unifica alturas visuales */
+input[type='text'],
+input[type='email'],
+input[type='password'],
+input[type='date'],
+input:not([type]),
+select {
+  height: 44px;
+}
+
+/* textarea */
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+/* focus verde */
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: #007485;
   box-shadow: 0 0 0 3px rgba(0, 116, 133, 0.15);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
 }
 
 /* helpers debajo de inputs */
@@ -157,11 +226,12 @@ select:focus {
   border-radius: 10px;
   padding: 0.75rem 1rem;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color 0.2s ease,
-    transform 0.1s ease;
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
   white-space: nowrap;
 }
 
@@ -172,6 +242,7 @@ select:focus {
 
 .btn-neutral:hover {
   background-color: #046472;
+  box-shadow: 0 10px 24px rgba(0, 116, 133, 0.14);
 }
 
 .btn-neutral:active {
@@ -181,62 +252,44 @@ select:focus {
 .btn-neutral:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-ghost {
   background: transparent;
   color: #007485;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .btn-ghost:hover {
   background: rgba(0, 116, 133, 0.08);
+  color: #046472;
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 116, 133, 0.18);
 }
 
 /* ===== FIX ALINEACIÓN GRID (reserva espacio para mensajes) ===== */
 .field {
   display: grid;
   gap: 6px;
+  position: relative;
 }
 
 .field-meta {
-  min-height: 16px; /* reserva espacio aunque no haya mensaje */
+  min-height: 16px;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
 }
 
-/* textos bajo el input */
-.help {
-  color: #6b7280;
-  font-weight: 500;
-}
-
-.field-error {
-  color: #b91c1c;
-  font-weight: 700;
-}
-
-/* (Opcional) unifica alturas visuales de inputs/select */
-input[type='text'],
-input[type='email'],
-input[type='password'],
-select {
-  height: 44px; /* 👈 mismo alto */
-  box-sizing: border-box;
-}
-
-.field {
-  position: relative;
-}
-
-/* Dropdown */
+/* ===== Dropdown autocomplete ===== */
 .autocomplete {
   position: absolute;
   left: 0;
   right: 0;
-
-  /* importante: que se vea debajo del input */
   top: calc(100% + 6px);
 
   background: #fff;
@@ -245,14 +298,13 @@ select {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
 
   max-height: 260px;
-  overflow-y: auto; /* ✅ scroll vertical */
+  overflow-y: auto;
   overflow-x: hidden;
 
-  z-index: 100000; /* ✅ por encima del modal */
+  z-index: 100000;
   padding: 6px;
 }
 
-/* cada item como botón full */
 .autocomplete-item {
   width: 100%;
   display: block;
@@ -281,5 +333,24 @@ select {
 
   .modal {
     width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+
+  .modal-header {
+    padding: 14px 14px;
+  }
+
+  .modal-body {
+    padding: 14px;
+  }
+
+  /* ✅ botones cómodos en móvil */
+  .modal-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
   }
 }

@@ -36,18 +36,18 @@
 
           <tbody>
             <tr *ngFor="let c of cursos" (click)="openCurso(c)" style="cursor: pointer">
-              <td class="font-medium">{{ c.nombre }}</td>
-              <td>{{ c.entidad?.nombre_comercial || c.entidad?.razon_social || '—' }}</td>
-              <td>{{ prettyDate(c.fecha_inicio) }}</td>
-              <td>{{ prettyDate(c.fecha_fin) }}</td>
-
-              <td>
+              <td class="font-medium" data-label="Nombre">{{ c.nombre }}</td>
+              <td data-label="Entidad">
+                {{ c.entidad?.nombre_comercial || c.entidad?.razon_social || '—' }}
+              </td>
+              <td data-label="Inicio">{{ prettyDate(c.fecha_inicio) }}</td>
+              <td data-label="Fin">{{ prettyDate(c.fecha_fin) }}</td>
+              <td data-label="Activo">
                 <span class="badge" [ngClass]="badgeClass(!!c.activo)">
                   {{ c.activo ? 'Activo' : 'Inactivo' }}
                 </span>
               </td>
-
-              <td class="text-right">
+              <td class="text-right" data-label="Acciones">
                 <button
                   class="btn btn-ghost btn-sm"
                   (click)="openEdit(c, $event)"

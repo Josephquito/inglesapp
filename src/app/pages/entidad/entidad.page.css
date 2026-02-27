@@ -4,7 +4,6 @@
   flex-direction: column;
   gap: 14px;
 
-  /* centrado tipo card */
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px 14px;
@@ -51,6 +50,7 @@
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .card-body {
@@ -84,11 +84,30 @@
 /* ====== TABLA ====== */
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+/* Scrollbar (opcional, pero se siente mejor en desktop) */
+.table-wrap::-webkit-scrollbar {
+  height: 10px;
+}
+.table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+.table-wrap::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
+
+  /* ✅ evita compresión en pantallas medianas/pequeñas (si no aplicas modo card) */
+  min-width: 980px;
 }
 
 .table thead th {
@@ -138,7 +157,6 @@
   border: 1px solid transparent;
 }
 
-/* Si tu badgeClass retorna estas clases, ya quedan bonitos */
 .badge-success {
   background: rgba(0, 116, 133, 0.1);
   color: #046472;
@@ -220,5 +238,65 @@
 
   .title {
     font-size: 1.35rem;
+  }
+
+  /* ✅ MODO CARDS: tabla legible sin compresión */
+  .table {
+    min-width: 0; /* dejamos de forzar ancho */
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tbody tr {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  }
+
+  .table td {
+    border: none;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    flex: 0 0 38%;
+    max-width: 38%;
+  }
+
+  .table td.text-right {
+    text-align: left;
+  }
+
+  .table td.text-right > * {
+    margin-left: auto;
+  }
+
+  .empty {
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.02);
   }
 }

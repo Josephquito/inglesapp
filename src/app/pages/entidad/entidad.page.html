@@ -34,16 +34,14 @@
 
           <tbody>
             <tr *ngFor="let e of entidades">
-              <td class="font-medium">{{ e.nombre_comercial }}</td>
-              <td>{{ e.ruc }}</td>
-              <td>{{ e.razon_social }}</td>
-              <td>{{ e.direccion }}</td>
-              <td>
-                <span [class]="badgeClass(!!e.activo)">
-                  {{ e.activo ? 'ACTIVO' : 'INACTIVO' }}
-                </span>
+              <td class="font-medium" data-label="Nombre comercial">{{ e.nombre_comercial }}</td>
+              <td data-label="RUC">{{ e.ruc }}</td>
+              <td data-label="Razón social">{{ e.razon_social }}</td>
+              <td data-label="Dirección">{{ e.direccion }}</td>
+              <td data-label="Activo">
+                <span [class]="badgeClass(!!e.activo)">{{ e.activo ? 'ACTIVO' : 'INACTIVO' }}</span>
               </td>
-              <td class="text-right">
+              <td class="text-right" data-label="Acciones">
                 <button class="btn btn-ghost btn-sm" (click)="openEdit(e)">Editar</button>
               </td>
             </tr>

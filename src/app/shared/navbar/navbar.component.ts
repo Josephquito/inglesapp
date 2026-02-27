@@ -113,6 +113,9 @@ export class NavbarComponent implements OnInit {
     if (Math.abs(delta) < this.showThreshold) return;
 
     this.navVisible = delta < 0;
+    if (!this.navVisible) {
+      this.closeMobileMenu();
+    }
     this.lastScrollTop = st <= 0 ? 0 : st;
   }
 }

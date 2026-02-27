@@ -16,17 +16,23 @@
   gap: 16px;
 }
 
+.header > div {
+  min-width: 0;
+}
+
 .title {
   color: #007485;
   font-size: 1.6rem;
-  font-weight: 600;
+  font-weight: 650;
   margin: 0 0 6px;
+  line-height: 1.15;
 }
 
 .subtitle {
   margin: 0;
   color: #6b7280;
   font-size: 0.95rem;
+  line-height: 1.35;
 }
 
 /* ====== ALERTA ERROR ====== */
@@ -43,12 +49,13 @@
   color: #b91c1c;
 }
 
-/* ====== CARD ====== */
+/* ====== CARD CONTENEDOR ====== */
 .card {
   background-color: #ffffff;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .card-body {
@@ -79,14 +86,110 @@
   }
 }
 
-.font-medium {
-  font-weight: 600;
+/* ====== GRID DE CURSOS ====== */
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.empty {
-  text-align: center;
-  padding: 18px;
+/* ====== COURSE CARD ====== */
+.course-card {
+  cursor: pointer;
+  user-select: none;
+
+  background: #fff;
+  border-radius: 15px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 116, 133, 0.22);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.08);
+}
+
+.course-card:active {
+  transform: translateY(0);
+}
+
+/* head: nombre + badge */
+.course-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.course-name {
+  font-size: 1.02rem;
+  font-weight: 750;
+  color: #111827;
+  line-height: 1.2;
+
+  /* ✅ evita overflow en nombres largos */
+  min-width: 0;
+  word-break: break-word;
+}
+
+.font-medium {
+  font-weight: 650;
+}
+
+/* descripcion */
+.course-desc {
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.35;
+
+  /* ✅ recorta a 3 líneas para que el grid quede parejo */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* meta info */
+.course-meta {
+  margin-top: 2px;
+  display: grid;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.meta-label {
+  font-size: 12px;
+  font-weight: 800;
   color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex: 0 0 auto;
+}
+
+.meta-value {
+  font-size: 0.92rem;
+  font-weight: 650;
+  color: #111827;
+  min-width: 0;
+  word-break: break-word;
 }
 
 /* ====== BADGES ====== */
@@ -96,8 +199,9 @@
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 .badge-success {
@@ -112,114 +216,55 @@
   border-color: rgba(245, 158, 11, 0.25);
 }
 
-/* ====== TARJETAS (NUEVO) ====== */
-.courses-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.course-card {
-  background: #ffffff;
-  border-radius: 15px; /* igual que .card */
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 1rem;
-  cursor: pointer;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
-
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.1s ease,
-    box-shadow 0.2s ease;
-}
-
-.course-card:hover {
-  background: rgba(0, 116, 133, 0.04); /* igual que hover tabla */
-  border-color: rgba(0, 116, 133, 0.25);
-  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.08);
-}
-
-.course-card:active {
-  transform: translateY(1px);
-}
-
-.course-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.course-name {
-  color: #111827;
-  font-size: 0.98rem;
-  line-height: 1.25;
-}
-
-.course-desc {
+/* ====== EMPTY ====== */
+.empty {
+  text-align: center;
+  padding: 18px;
   color: #6b7280;
-  font-size: 0.92rem;
-  line-height: 1.25;
-  margin-bottom: 10px;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.course-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.meta-row {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-  font-size: 0.9rem;
-}
-
-.meta-label {
-  color: #6b7280;
-  white-space: nowrap;
-}
-
-.meta-value {
-  color: #111827;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.02);
 }
 
 /* ====== RESPONSIVE ====== */
+
+/* Tablets: 2 columnas */
 @media (max-width: 980px) {
   .courses-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+/* Mobile: 1 columna + paddings más pequeños */
 @media (max-width: 700px) {
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .card-body {
-    padding: 1rem;
-  }
   .title {
     font-size: 1.35rem;
   }
-}
 
-@media (max-width: 620px) {
+  .card-body {
+    padding: 1rem;
+  }
+
   .courses-grid {
     grid-template-columns: 1fr;
   }
-  .meta-value {
-    white-space: normal;
+
+  .course-card {
+    padding: 12px;
+  }
+
+  .course-desc {
+    -webkit-line-clamp: 4; /* en móvil dejamos 4 líneas */
+  }
+}
+
+/* Mobile pequeño */
+@media (max-width: 420px) {
+  .page {
+    padding: 18px 12px;
+  }
+
+  .course-name {
+    font-size: 1rem;
   }
 }

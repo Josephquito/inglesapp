@@ -1,4 +1,27 @@
 .layout-content {
-  min-height: calc(100vh - 320px);
-  padding-top: var(--nav-h); /* ahora solo aplica donde existe navbar */
+  /* ✅ fallback si no existe la variable */
+  padding-top: var(--nav-h, 70px);
+
+  /* ✅ que el contenido no quede pegado a los bordes */
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 24px;
+
+  /* ✅ altura real en móviles (evita bugs de 100vh en iOS/Android) */
+  min-height: calc(100dvh - var(--nav-h, 70px));
+
+  /* ✅ si algo se pasa de ancho, que no genere scroll horizontal */
+  overflow-x: hidden;
+
+  /* opcional: centra y limita ancho en pantallas grandes */
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .layout-content {
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 32px;
+  }
 }

@@ -13,6 +13,7 @@
   transform: translateY(0);
   transition: transform 0.25s ease;
   will-change: transform;
+  --nav-h: 70px;
 }
 
 /* Ocultar cuando bajas */
@@ -146,6 +147,14 @@
   color: #b91c1c;
 }
 
+/* ✅ Si el navbar está oculto, no mostrar overlay/panel */
+.nav-wrap.nav-wrap--hidden ~ .mobile-overlay,
+.nav-wrap.nav-wrap--hidden ~ .mobile-panel {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(-140%) !important;
+}
+
 /* =========================
    BREAKPOINT MÓVIL
 ========================= */
@@ -169,7 +178,8 @@
 
     /* IMPORTANTE: empieza debajo del navbar.
        Ajusta este valor si tu navbar no mide ~72px */
-    top: 70px;
+    top: var(--nav-h);
+    max-height: calc(100vh - var(--nav-h));
 
     z-index: 2990;
 
@@ -183,7 +193,6 @@
     transition: transform 0.25s ease;
 
     /* Scroll interno si hay muchos items */
-    max-height: calc(100vh - 70px);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   }

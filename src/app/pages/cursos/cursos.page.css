@@ -49,6 +49,7 @@
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .card-body {
@@ -82,11 +83,30 @@
 /* ====== TABLA ====== */
 .table-wrap {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+}
+
+/* Scrollbar opcional (se siente mejor) */
+.table-wrap::-webkit-scrollbar {
+  height: 10px;
+}
+.table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+.table-wrap::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: auto;
+
+  /* ✅ evita compresión si estás en pantallas medianas */
+  min-width: 980px;
 }
 
 .table thead th {
@@ -107,6 +127,10 @@
   color: #111827;
 }
 
+.table tbody tr {
+  transition: background 0.15s ease;
+}
+
 .table tbody tr:hover {
   background: rgba(0, 116, 133, 0.04);
 }
@@ -114,6 +138,7 @@
 .font-medium {
   font-weight: 600;
 }
+
 .text-right {
   text-align: right;
 }
@@ -157,7 +182,8 @@
   cursor: pointer;
   transition:
     background-color 0.2s ease,
-    transform 0.1s ease;
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
   white-space: nowrap;
 }
 
@@ -168,13 +194,17 @@
 
 .btn-neutral:hover {
   background-color: #046472;
+  box-shadow: 0 10px 24px rgba(0, 116, 133, 0.14);
 }
+
 .btn-neutral:active {
   transform: translateY(1px);
 }
+
 .btn-neutral:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-ghost {
@@ -201,13 +231,81 @@
     flex-direction: column;
     align-items: stretch;
   }
+
   .btn-neutral {
     width: 100%;
   }
+
   .card-body {
     padding: 1rem;
   }
+
   .title {
     font-size: 1.35rem;
+  }
+
+  /* ✅ MODO CARDS (sin compresión) */
+  .table {
+    min-width: 0;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table tbody tr {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 14px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  }
+
+  .table td {
+    border: none;
+    padding: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .table td::before {
+    content: attr(data-label);
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    flex: 0 0 38%;
+    max-width: 38%;
+  }
+
+  .table td.text-right {
+    text-align: left;
+  }
+
+  .table td.text-right > * {
+    margin-left: auto;
+  }
+
+  /* ✅ el row clickable sigue funcionando, pero se siente más “card” */
+  .table tbody tr:hover {
+    background: rgba(0, 116, 133, 0.03);
+  }
+
+  .empty {
+    border: 1px dashed rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.02);
   }
 }

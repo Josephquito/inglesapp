@@ -1,3 +1,4 @@
+/* ====== CONTENEDOR ====== */
 .page {
   display: flex;
   flex-direction: column;
@@ -7,6 +8,7 @@
   padding: 24px 14px;
 }
 
+/* ====== HEADER ====== */
 .header {
   display: flex;
   align-items: flex-start;
@@ -14,19 +16,33 @@
   gap: 16px;
 }
 
+/* Evita que el bloque del título empuje el botón raro */
+.header > div {
+  min-width: 0; /* ✅ clave para truncar/ajustar texto en flex */
+}
+
 .title {
   color: #007485;
   font-size: 1.6rem;
-  font-weight: 600;
+  font-weight: 650;
   margin: 0 0 6px;
+  line-height: 1.15;
+
+  /* ✅ evita desbordes con nombres largos */
+  word-break: break-word;
 }
 
 .subtitle {
   margin: 0;
   color: #6b7280;
   font-size: 0.95rem;
+  line-height: 1.35;
+
+  /* ✅ desborde controlado */
+  word-break: break-word;
 }
 
+/* ====== ALERTAS ====== */
 .alert {
   padding: 0.75rem;
   border-radius: 10px;
@@ -40,36 +56,51 @@
   color: #b91c1c;
 }
 
+/* ====== CARDS ====== */
 .card {
   background-color: #ffffff;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .card-body {
   padding: 1.25rem;
 }
 
+/* ====== INFO GRID ====== */
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr)); /* ✅ minmax evita overflow */
   gap: 12px;
+}
+
+.info-item {
+  padding: 12px 12px;
+  border-radius: 12px;
+  background: rgba(0, 116, 133, 0.04);
+  border: 1px solid rgba(0, 116, 133, 0.12);
 }
 
 .info-item .k {
   font-size: 12px;
   color: #6b7280;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .info-item .v {
   font-size: 0.95rem;
   color: #111827;
-  font-weight: 600;
+  font-weight: 650;
+  line-height: 1.25;
+  word-break: break-word;
 }
 
+/* ====== LOADING ====== */
 .loading-row {
   display: flex;
   align-items: center;
@@ -93,16 +124,18 @@
   }
 }
 
+/* ====== BOTONES ====== */
 .btn {
   border: none;
   border-radius: 10px;
   padding: 0.75rem 0.95rem;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition:
     background-color 0.2s ease,
-    transform 0.1s ease;
+    transform 0.1s ease,
+    box-shadow 0.2s ease;
   white-space: nowrap;
 }
 
@@ -113,24 +146,59 @@
 
 .btn-neutral:hover {
   background-color: #046472;
+  box-shadow: 0 10px 24px rgba(0, 116, 133, 0.14);
 }
+
 .btn-neutral:active {
   transform: translateY(1px);
 }
+
 .btn-neutral:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
+/* ====== RESPONSIVE ====== */
+
+/* tablets: 2 columnas en info */
+@media (max-width: 900px) {
+  .info-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* móviles */
 @media (max-width: 700px) {
   .header {
     flex-direction: column;
     align-items: stretch;
   }
+
   .btn-neutral {
     width: 100%;
   }
+
+  .title {
+    font-size: 1.35rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
   .info-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* móviles pequeños */
+@media (max-width: 420px) {
+  .page {
+    padding: 18px 12px;
+  }
+
+  .info-item {
+    padding: 10px 10px;
   }
 }
