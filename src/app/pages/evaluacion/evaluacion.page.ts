@@ -67,7 +67,6 @@ type Vm = {
   styleUrls: ['./evaluacion.page.css'],
 })
 export class EvaluacionPage {
-  // UI local
   activeTab: TabKey = 'preguntas';
 
   createOpen = false;
@@ -77,12 +76,10 @@ export class EvaluacionPage {
   revisionOpen = false;
   selectedIntentoId = 0;
 
-  // triggers para recargar
   private reloadAll$ = new Subject<void>();
   private reloadRespuestas$ = new Subject<void>();
   private reloadTipos$ = new Subject<void>();
 
-  // VM
   vm$: Observable<Vm>;
 
   constructor(
@@ -108,23 +105,13 @@ export class EvaluacionPage {
       shareReplay(1),
     );
 
-    const perfil$ = defer(() => from(this.authApi.getPerfil())).pipe(
-      catchError((err: any) => {
-        // si es unauthorized -> navega login (sin romper vm$)
-        const msg = err?.error?.message ?? err?.message ?? '';
-        if (
-          String(msg).toLowerCase().includes('unauthorized') ||
-          String(msg).toLowerCase().includes('no autentic')
-        ) {
-          // navegación en microtask para evitar pelear con render
-          queueMicrotask(() => void this.router.navigateByUrl('/login'));
-          return of({
-            __authError: true,
-            message: 'Sesión caducada. Vuelve a iniciar sesión.',
-          } as any);
-        }
-        return of(null);
-      }),
+    // ✅ PERFIL:
+    // - No navegar aquí.
+    // - Si falla (401/403), el AuthErrorInterceptor + guards se encargan.
+    const perfil$ = defer(() =>
+      from(this.authApi.getPerfilCached?.() ?? this.authApi.getPerfil()),
+    ).pipe(
+      catchError(() => of(null)),
       shareReplay(1),
     );
 
@@ -137,25 +124,47 @@ export class EvaluacionPage {
       shareReplay(1),
     );
 
-    const curso$ = ids$.pipe(
-      switchMap(({ id_curso }) =>
-        id_curso ? defer(() => from(this.cursosApi.detalleMiCurso(id_curso))) : of(null),
-      ),
-      catchError(() => of(null)),
+    // ✅ Curso y Evaluación: gate por perfil (evita requests “fantasma” al refrescar)
+    const curso$ = combineLatest([ids$, perfil$]).pipe(
+      switchMap(([{ id_curso }, perfil]) => {
+        if (!id_curso) return of(null);
+        if (!perfil) return of(null);
+        return defer(() => from(this.cursosApi.detalleMiCurso(id_curso))).pipe(
+          catchError(() => of(null)),
+        );
+      }),
       shareReplay(1),
     );
 
-    const evaluacion$ = ids$.pipe(
-      switchMap(({ id_evaluacion }) =>
-        id_evaluacion ? defer(() => from(this.evalApi.obtenerPorId(id_evaluacion))) : of(null),
-      ),
-      catchError(() => of(null)),
+    const evaluacion$ = combineLatest([ids$, perfil$]).pipe(
+      switchMap(([{ id_evaluacion }, perfil]) => {
+        if (!id_evaluacion) return of(null);
+        if (!perfil) return of(null);
+        return defer(() => from(this.evalApi.obtenerPorId(id_evaluacion))).pipe(
+          catchError(() => of(null)),
+        );
+      }),
       shareReplay(1),
     );
 
-    const tiposState$ = combineLatest([isDocente$, this.reloadTipos$.pipe(startWith(void 0))]).pipe(
-      switchMap(([isDocente]) =>
-        defer(() => from(this.tipoApi.selectOneMenu())).pipe(
+    const tiposState$ = combineLatest([
+      perfil$,
+      isDocente$,
+      this.reloadTipos$.pipe(startWith(void 0)),
+    ]).pipe(
+      switchMap(([perfil, isDocente]) => {
+        if (!perfil) {
+          return of({
+            loadingTipos: true,
+            tiposPregunta: [],
+            tiposSueltas: [],
+            tiposBloque: [],
+            error: '',
+            isDocente,
+          });
+        }
+
+        return defer(() => from(this.tipoApi.selectOneMenu())).pipe(
           map((tipos: any) => {
             const tiposPregunta: TipoPreguntaMenu[] = Array.isArray(tipos) ? tipos : [];
             return {
@@ -187,18 +196,26 @@ export class EvaluacionPage {
               isDocente,
             }),
           ),
-        ),
-      ),
+        );
+      }),
       shareReplay(1),
     );
 
-    const allState$ = combineLatest([ids$, this.reloadAll$.pipe(startWith(void 0))]).pipe(
-      switchMap(([{ id_evaluacion }]) => {
+    const allState$ = combineLatest([ids$, perfil$, this.reloadAll$.pipe(startWith(void 0))]).pipe(
+      switchMap(([{ id_evaluacion }, perfil]) => {
         if (!id_evaluacion) {
           return of({
             loadingPreguntas: false,
             itemsTabla: [],
             error: 'ID de evaluación inválido.',
+          });
+        }
+
+        if (!perfil) {
+          return of({
+            loadingPreguntas: true,
+            itemsTabla: [],
+            error: '',
           });
         }
 
@@ -249,13 +266,14 @@ export class EvaluacionPage {
 
     const respuestasState$ = combineLatest([
       ids$,
+      perfil$,
       isDocente$,
       this.reloadRespuestas$.pipe(startWith(void 0)),
     ]).pipe(
-      switchMap(([{ id_evaluacion }, isDocente]) => {
-        if (!isDocente || !id_evaluacion) {
+      switchMap(([{ id_evaluacion }, perfil, isDocente]) => {
+        if (!perfil) return of({ loadingRespuestas: true, intentosMejor: [], error: '' });
+        if (!isDocente || !id_evaluacion)
           return of({ loadingRespuestas: false, intentosMejor: [], error: '' });
-        }
 
         return defer(() => from(this.rendApi.listarMejorIntentoPorEstudiante(id_evaluacion))).pipe(
           map((resp: any) => ({
@@ -293,9 +311,7 @@ export class EvaluacionPage {
           [`eval:${ids.id_evaluacion}`]: evaluacion?.titulo ?? `Evaluación ${ids.id_evaluacion}`,
         };
 
-        // error prioritario
         const errorMessage =
-          (perfil?.__authError ? perfil?.message : '') ||
           (ids.id_evaluacion ? '' : 'ID de evaluación inválido.') ||
           tipos.error ||
           all.error ||
@@ -303,7 +319,12 @@ export class EvaluacionPage {
           '';
 
         const loading =
-          !ids.id_evaluacion || !curso || !evaluacion || tipos.loadingTipos || all.loadingPreguntas;
+          !ids.id_evaluacion ||
+          !perfil ||
+          !curso ||
+          !evaluacion ||
+          tipos.loadingTipos ||
+          all.loadingPreguntas;
 
         return {
           loading,
@@ -312,7 +333,7 @@ export class EvaluacionPage {
           id_curso: ids.id_curso,
           id_evaluacion: ids.id_evaluacion,
 
-          perfil: perfil?.__authError ? null : perfil,
+          perfil,
           curso,
           evaluacion,
 
@@ -361,15 +382,12 @@ export class EvaluacionPage {
   }
 
   openCreate(vm: Vm) {
-    // asegura que haya tipos cargados
     if (!vm.tiposPregunta.length && !vm.loadingTipos) {
       this.reloadTipos$.next();
     }
 
     if (vm.tiposPregunta.length && vm.tiposSueltas.length === 0) {
-      alert(
-        'Aún no hay tipos de pregunta suelta disponibles. (WRITING, MULTIPLE_CHOICE, SPEAKING, MATCHING).',
-      );
+      alert('Aún no hay tipos de pregunta suelta disponibles.');
       return;
     }
 

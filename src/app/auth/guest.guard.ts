@@ -17,6 +17,6 @@ export class GuestGuard implements CanActivate {
 
   canActivate(): boolean | UrlTree {
     if (!this.isBrowser) return true;
-    return this.auth.isAuthenticated() ? this.router.parseUrl('/inicio') : true;
+    return this.auth.isAuthenticated() ? this.router.parseUrl('/mis-cursos') : true;
   }
 }

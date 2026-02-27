@@ -104,5 +104,5 @@ export const routes: Routes = [
   },
 
   // fallback
-  { path: '**', redirectTo: 'login', data: { renderMode: 'server' } },
+  { path: '**', redirectTo: '', data: { renderMode: 'server' } },
 ];

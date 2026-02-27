@@ -26,6 +26,8 @@ import {
   takeUntil,
   tap,
 } from 'rxjs/operators';
+import { retryWhen, scan, delayWhen } from 'rxjs/operators';
+import { timer } from 'rxjs';
 
 import { RendicionesService } from '../../services/rendiciones.service';
 import { AuthService } from '../../services/auth.service';
@@ -34,6 +36,8 @@ import { UploadsService } from '../../services/uploads.service';
 import { RendirPreguntaComponent } from '../../shared/components/rendir-pregunta/rendir-pregunta.component';
 import { ConfirmarFinalizarModalComponent } from '../../shared/modales/confirmar-finalizar/confirmar-finalizar.modal';
 import { ProctoringWarnModalComponent } from '../../shared/modales/rendir-evaluacion/proctoring-warn/proctoring-warn.modal';
+import { Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 type SaveState = { saving?: boolean; savedAt?: string; error?: string };
 
@@ -133,6 +137,7 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // ✅ streams de ruta (se crean en constructor para no TS2729)
+  private isBrowser = false;
   private idIntento$!: Observable<number>;
   private cursoSeguro$!: Observable<number | null>;
 
@@ -179,12 +184,14 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
   vm$!: Observable<Vm>;
 
   private onVisChange = () => {
+    if (!this.isBrowser) return;
     const ui = this.ui$.value;
     if (!ui.proctoringRequired || ui.entregadoConExito || ui.suspended) return;
     if (document.hidden) void this.sendWarn('TAB_SWITCH');
   };
 
   private onBlur = () => {
+    if (!this.isBrowser) return;
     const ui = this.ui$.value;
     if (!ui.proctoringRequired || ui.entregadoConExito || ui.suspended) return;
     void this.sendWarn('WINDOW_BLUR');
@@ -196,7 +203,9 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
     private api: RendicionesService,
     private authApi: AuthService,
     private uploads: UploadsService,
+    @Inject(PLATFORM_ID) platformId: object,
   ) {
+    this.isBrowser = isPlatformBrowser(platformId);
     this.idIntento$ = this.route.paramMap.pipe(
       map((pm) => Number(pm.get('id_intento') || 0)),
       distinctUntilChanged(),
@@ -211,6 +220,30 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
       startWith(null),
       shareReplay(1),
     );
+  }
+  private retryTransient<T>() {
+    return (source: Observable<T>) =>
+      source.pipe(
+        retryWhen((errors) =>
+          errors.pipe(
+            scan((acc, err: any) => {
+              const status = err?.status ?? err?.error?.status ?? 0;
+
+              // ❌ No reintentar auth errors reales
+              if (status === 401 || status === 403) throw err;
+
+              const isTransient =
+                status === 0 || status === 502 || status === 503 || status === 504;
+
+              if (!isTransient) throw err;
+              if (acc >= 2) throw err; // max 2 retries
+
+              return acc + 1;
+            }, 0),
+            delayWhen((n) => timer(n === 1 ? 250 : 600)),
+          ),
+        ),
+      );
   }
 
   ngOnInit() {
@@ -227,6 +260,11 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
     // ✅ cargar intento + preguntas (defer/from/startWith/catchError/shareReplay)
     const load$ = this.idIntento$.pipe(
       switchMap((id_intento) => {
+        // ✅ SSR: no ejecutes nada (evita "No autenticado" y APIs de navegador)
+        if (!this.isBrowser) {
+          return of({ loading: true, error: '', payload: null as any });
+        }
+
         if (!id_intento) {
           return of({ loading: false, error: 'ID de intento inválido.', payload: null as any });
         }
@@ -234,18 +272,23 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
         return defer(() =>
           from(
             (async () => {
-              const perfil = await this.authApi.getPerfil();
+              // ✅ cache primero si existe
+              const perfil =
+                (await (this.authApi as any).getPerfilCached?.()) ??
+                (await this.authApi.getPerfil());
+
               const data = await this.api.obtenerPreguntasIntento(id_intento);
               return { id_intento, perfil, data };
             })(),
           ),
         ).pipe(
+          this.retryTransient(), // ✅ retry suave para fallos transitorios
           map((payload) => ({ loading: false, error: '', payload })),
           startWith({ loading: true, error: '', payload: null }),
           catchError((e: any) =>
             of({
               loading: false,
-              error: e?.error?.message ?? 'No se pudo cargar la rendición.',
+              error: e?.error?.message ?? e?.message ?? 'No se pudo cargar la rendición.',
               payload: null,
             }),
           ),
@@ -446,9 +489,12 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
 
-    this.detachProctoringGuards();
-    void this.safeStopRecording();
-    this.stopCamera();
+    // ✅ SSR-safe
+    if (this.isBrowser) {
+      this.detachProctoringGuards();
+      void this.safeStopRecording();
+      this.stopCamera();
+    }
   }
 
   // =========================
@@ -643,6 +689,7 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
   // PROCTORING (igual que tu código)
   // =========================
   async ensureProctoringStarted() {
+    if (!this.isBrowser) return;
     if (!this.ui$.value.proctoringRequired) return;
 
     this.ui$.next({ ...this.ui$.value, proctoringError: '', proctoringReady: false });
@@ -753,11 +800,13 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
   }
 
   private attachProctoringGuards() {
+    if (!this.isBrowser) return;
     document.addEventListener('visibilitychange', this.onVisChange);
     window.addEventListener('blur', this.onBlur);
   }
 
   private detachProctoringGuards() {
+    if (!this.isBrowser) return;
     document.removeEventListener('visibilitychange', this.onVisChange);
     window.removeEventListener('blur', this.onBlur);
   }

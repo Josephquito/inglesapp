@@ -1,10 +1,8 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, afterNextRender } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 
 import { CursosService } from '../../services/cursos.service';
-import { UsuariosService } from '../../services/usuarios.service';
-
 import { CrearCursoModalComponent } from '../../shared/modales/cursos/crear-curso/crear-curso.modal';
 import { EditarCursoModalComponent } from '../../shared/modales/cursos/editar-curso/editar-curso.modal';
 import { AuthService } from '../../services/auth.service';
@@ -32,10 +30,31 @@ export class CursosPage {
     private authApi: AuthService,
     private router: Router,
     private cd: ChangeDetectorRef,
-  ) {}
+  ) {
+    // ✅ Corre después del primer render (evita NG0100)
+    afterNextRender(() => {
+      void this.init();
+    });
+  }
 
-  ngOnInit() {
-    setTimeout(() => this.init(), 0);
+  private async sleep(ms: number) {
+    await new Promise((r) => setTimeout(r, ms));
+  }
+
+  private async withRetry<T>(fn: () => Promise<T>, attempts = 2, delayMs = 350): Promise<T> {
+    let lastErr: any;
+    for (let i = 0; i <= attempts; i++) {
+      try {
+        return await fn();
+      } catch (e: any) {
+        lastErr = e;
+        const status = e?.status ?? e?.error?.status ?? 0;
+        const isTransient = status === 0 || status === 502 || status === 503 || status === 504;
+        if (!isTransient || i === attempts) break;
+        await this.sleep(delayMs);
+      }
+    }
+    throw lastErr;
   }
 
   async init() {
@@ -44,8 +63,12 @@ export class CursosPage {
     this.cd.detectChanges();
 
     try {
-      this.perfil = await this.authApi.getPerfil();
-      await this.load();
+      // ✅ cache primero si existe
+      const cached = (this.authApi as any).getPerfilCached?.();
+      this.perfil = cached ? await cached : await this.authApi.getPerfil();
+
+      // ✅ lista con retry (opcional)
+      this.cursos = await this.withRetry(() => this.api.listar(), 2, 450);
     } catch (e: any) {
       this.errorMessage = e?.error?.message ?? 'No se pudo cargar cursos.';
       this.cursos = [];
@@ -61,7 +84,7 @@ export class CursosPage {
     this.cd.detectChanges();
 
     try {
-      this.cursos = await this.api.listar();
+      this.cursos = await this.withRetry(() => this.api.listar(), 2, 350);
     } catch (e: any) {
       this.errorMessage = e?.error?.message ?? 'No se pudo listar cursos.';
       this.cursos = [];
@@ -71,7 +94,6 @@ export class CursosPage {
     }
   }
 
-  // navegación: fila seleccionable
   openCurso(curso: any) {
     this.router.navigateByUrl(`/cursos/${curso.id_curso}`);
   }
@@ -97,12 +119,12 @@ export class CursosPage {
 
   onCreated() {
     this.closeAll();
-    this.load();
+    void this.load();
   }
 
   onUpdated() {
     this.closeAll();
-    this.load();
+    void this.load();
   }
 
   prettyDate(value: any) {

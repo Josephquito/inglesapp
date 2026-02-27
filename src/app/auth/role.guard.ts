@@ -14,7 +14,6 @@ export class RoleGuard implements CanActivate {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
   }
-
   canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
     if (!this.isBrowser) return true;
     if (!this.auth.isAuthenticated()) return this.router.parseUrl('/login');
@@ -22,6 +21,7 @@ export class RoleGuard implements CanActivate {
     const roles = (route.data?.['roles'] as UserRole[] | undefined) ?? [];
     if (!roles.length) return true;
 
-    return this.auth.hasAnyRole(roles) ? true : this.router.parseUrl('/inicio');
+    // si no tiene rol permitido, mándalo al home real
+    return this.auth.hasAnyRole(roles) ? true : this.router.parseUrl('/mis-cursos');
   }
 }
