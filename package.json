@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --configuration production && node -e \"require('fs').writeFileSync('dist/front/browser/_redirects','/* /index.html 200\\n')\"",
+    "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:front": "node dist/front/server/server.mjs"
