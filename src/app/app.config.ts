@@ -8,10 +8,11 @@ import {
   HTTP_INTERCEPTORS,
   provideHttpClient,
   withInterceptorsFromDi,
-  withFetch, // ✅ AÑADIR
+  withFetch,
 } from '@angular/common/http';
 import { TokenInterceptor } from './auth/token.interceptor';
 import { AuthErrorInterceptor } from './auth/auth-error.interceptor';
+import { TimeoutInterceptor } from './auth/timeout.interceptor'; // 👈
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,9 +32,9 @@ export const appConfig: ApplicationConfig = {
       theme: { preset: Aura, options: { darkModeSelector: false || 'none' } },
     }),
 
-    // ✅ habilita fetch + interceptores DI
     provideHttpClient(withFetch(), withInterceptorsFromDi()),
 
+    { provide: HTTP_INTERCEPTORS, useClass: TimeoutInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: TokenInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: AuthErrorInterceptor, multi: true },
   ],

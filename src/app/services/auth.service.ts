@@ -2,16 +2,8 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
-import { BehaviorSubject, Observable, firstValueFrom, of, throwError } from 'rxjs';
-import {
-  catchError,
-  map,
-  switchMap,
-  timeout,
-  tap,
-  distinctUntilChanged,
-  filter,
-} from 'rxjs/operators';
+import { BehaviorSubject, Observable, firstValueFrom, throwError } from 'rxjs';
+import { catchError, map, switchMap, tap, distinctUntilChanged, filter } from 'rxjs/operators';
 
 export type UserRole = 'ADMIN' | 'DOCENTE' | 'ESTUDIANTE';
 
@@ -20,13 +12,11 @@ export class AuthService {
   private API = `${environment.apiUrl}/auth`;
   private isBrowser: boolean;
 
-  // ✅ Estado en memoria (evita “null” transitorio al recargar)
   private perfilSubject = new BehaviorSubject<any | null>(null);
   public perfil$: Observable<any | null> = this.perfilSubject
     .asObservable()
     .pipe(distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)));
 
-  // ✅ “ready” = tengo perfil no nulo
   public ready$ = this.perfil$.pipe(filter((p) => !!p));
 
   constructor(
@@ -35,7 +25,6 @@ export class AuthService {
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
-    // ✅ Hidratar desde localStorage al iniciar
     if (this.isBrowser) {
       const raw = localStorage.getItem('perfil');
       if (raw) {
@@ -43,14 +32,12 @@ export class AuthService {
           const p = JSON.parse(raw);
           this.perfilSubject.next(p);
         } catch {
-          // perfil corrupto -> limpiar
           localStorage.removeItem('perfil');
         }
       }
     }
   }
 
-  // ✅ útil si tu interceptor necesita el token
   getToken(): string | null {
     if (!this.isBrowser) return null;
     const token = localStorage.getItem('token');
@@ -60,8 +47,6 @@ export class AuthService {
 
   login$(username: string, password: string) {
     return this.http.post<any>(`${this.API}/login`, { username, password }).pipe(
-      timeout(12000),
-
       map((res) => {
         const token = res?.access_token;
         if (!token) {
@@ -71,12 +56,10 @@ export class AuthService {
         return token;
       }),
 
-      // interceptor pone Authorization automáticamente
-      switchMap(() => this.http.get<any>(`${this.API}/perfil`).pipe(timeout(12000))),
+      switchMap(() => this.http.get<any>(`${this.API}/perfil`)),
 
       tap((perfil) => {
         if (this.isBrowser) localStorage.setItem('perfil', JSON.stringify(perfil));
-        // ✅ poner en memoria inmediatamente (esto arregla el “flash” en recarga/navegación)
         this.perfilSubject.next(perfil);
       }),
 
@@ -84,16 +67,10 @@ export class AuthService {
     );
   }
 
-  /**
-   * ✅ Perfil desde cache primero (sin pegar al backend).
-   * Si no hay cache, consulta backend (si hay token).
-   */
   async getPerfilCached(): Promise<any> {
-    // 1) si ya está en memoria, úsalo
     const mem = this.perfilSubject.value;
     if (mem) return mem;
 
-    // 2) si hay cache, úsalo
     if (this.isBrowser) {
       const raw = localStorage.getItem('perfil');
       if (raw) {
@@ -107,30 +84,21 @@ export class AuthService {
       }
     }
 
-    // 3) si hay token, pide al backend
     const token = this.getToken();
     if (!token) throw new Error('No autenticado');
 
-    const perfil = await firstValueFrom(
-      this.http.get<any>(`${this.API}/perfil`).pipe(timeout(12000)),
-    );
+    const perfil = await firstValueFrom(this.http.get<any>(`${this.API}/perfil`));
 
     if (this.isBrowser) localStorage.setItem('perfil', JSON.stringify(perfil));
     this.perfilSubject.next(perfil);
     return perfil;
   }
 
-  /**
-   * ✅ Fuerza consulta al backend (si hay token).
-   * Mantengo tu método original pero ahora actualiza el subject/cache.
-   */
   async getPerfil(): Promise<any> {
     const token = this.getToken();
     if (!token) throw new Error('No autenticado');
 
-    const perfil = await firstValueFrom(
-      this.http.get<any>(`${this.API}/perfil`).pipe(timeout(12000)),
-    );
+    const perfil = await firstValueFrom(this.http.get<any>(`${this.API}/perfil`));
 
     if (this.isBrowser) localStorage.setItem('perfil', JSON.stringify(perfil));
     this.perfilSubject.next(perfil);
@@ -144,11 +112,9 @@ export class AuthService {
   getUserRole(): UserRole | null {
     if (!this.isBrowser) return null;
 
-    // 1) token
     const tokenRole = this.getRoleFromToken();
     if (tokenRole) return tokenRole;
 
-    // 2) perfil en memoria/cache
     const perfil = this.perfilSubject.value;
     const perfilRole = perfil?.rol?.nombre ?? perfil?.rol;
     return this.normalizeRole(perfilRole);
