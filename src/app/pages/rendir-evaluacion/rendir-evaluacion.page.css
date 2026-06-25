@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  max-width: 1100px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 24px 14px;
 }
@@ -326,6 +326,97 @@
   margin: 0;
 }
 
+/* ===== Sidebar de categorías ===== */
+.skills-menu {
+  width: 230px;
+  flex-shrink: 0;
+  max-height: calc(100vh - 380px);
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.skill-group {
+  margin-bottom: 18px;
+}
+
+.skill-group-name {
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #111827;
+}
+
+.skill-group-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skill-question-box {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  font-weight: 800;
+  font-size: 0.78rem;
+  color: #111827;
+  cursor: pointer;
+  padding: 0;
+  transition:
+    transform 0.12s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.skill-question-box:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 116, 133, 0.35);
+  background: rgba(0, 116, 133, 0.04);
+}
+
+/* Respondida: turquesa empresa (igual que tu .jump-dot.answered) */
+.skill-question-box.answered {
+  background: #007485;
+  border-color: #007485;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(0, 116, 133, 0.22);
+}
+
+/* Pregunta actual: solo borde turquesa */
+.skill-question-box.current {
+  background: #ffffff;
+  color: #111827;
+  border: 2px solid #007485;
+}
+
+/* Respondida Y actual: turquesa + borde más oscuro */
+.skill-question-box.answered.current {
+  background: #007485;
+  border: 2px solid #046472;
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(0, 116, 133, 0.28);
+}
+
+.skill-question-box:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Scrollbar suave, igual que .question-viewport */
+.skills-menu::-webkit-scrollbar {
+  width: 8px;
+}
+.skills-menu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+.skills-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+
 /* Navegación */
 .eval-nav {
   display: flex;
@@ -334,66 +425,17 @@
   align-items: center;
 }
 
-.jump {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-/* Base: no respondida */
-.jump-dot {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  background: #ffffff;
-
-  font-weight: 800;
-  font-size: 0.9rem;
-  color: #111827;
-
-  cursor: pointer;
-  transition:
-    transform 0.12s ease,
-    border-color 0.18s ease,
-    background-color 0.18s ease;
-}
-
-.jump-dot:hover {
-  transform: translateY(-1px);
-  border-color: rgba(0, 116, 133, 0.35);
-  background: rgba(0, 116, 133, 0.04);
-}
-
-/* Respondida: turquesa empresa */
-.jump-dot.answered {
-  background: #007485;
-  border-color: #007485;
-  color: #ffffff;
-  box-shadow: 0 6px 14px rgba(0, 116, 133, 0.22);
-}
-
-/* Pregunta actual: SOLO borde turquesa (sin fondo) */
-.jump-dot.current {
-  background: #ffffff;
-  color: #111827;
-  border: 2px solid #007485;
-  box-shadow: none;
-}
-
-/* Si está respondida Y es la actual: mantenemos turquesa + borde más marcado */
-.jump-dot.answered.current {
-  background: #007485;
-  border: 2px solid #046472; /* un tono más oscuro para destacar */
-  color: #ffffff;
-  box-shadow: 0 8px 18px rgba(0, 116, 133, 0.28);
-}
-
 /* Layout: contenido + footer fijo */
 .question-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.question-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -524,20 +566,24 @@
   color: #4b5563;
 }
 
-/* Mobile */
-@media (max-width: 700px) {
-  .question-viewport {
-    min-height: 420px;
-    max-height: calc(100vh - 320px);
+/* ============================================================
+   RESPONSIVE — consolidado (tablet → mobile → mobile pequeño)
+   ============================================================ */
+
+/* ===== Tablet: sidebar más angosto, todavía en fila ===== */
+@media (max-width: 1024px) {
+  .skills-menu {
+    width: 190px;
   }
-  .eval-nav {
-    flex-wrap: wrap;
-    justify-content: center;
+
+  .question-viewport {
+    max-height: calc(100vh - 340px);
   }
 }
 
-/* ===== Responsive ===== */
+/* ===== Mobile: sidebar arriba, header apilado, footer/exam ajustado ===== */
 @media (max-width: 700px) {
+  /* Header */
   .header {
     flex-direction: column;
     align-items: stretch;
@@ -547,19 +593,65 @@
     justify-content: space-between;
   }
 
-  .card-body {
-    padding: 1rem;
-  }
-
   .title {
     font-size: 1.35rem;
   }
 
+  /* Card */
+  .card-body {
+    padding: 1rem;
+  }
+
+  /* Resultado */
   .result-row {
     grid-template-columns: 1fr;
   }
 
-  /* viewport más alto en móvil y más espacio al footer */
+  /* Viewport de pregunta */
+  .question-viewport {
+    min-height: 380px;
+    max-height: calc(100vh - 300px);
+  }
+
+  /* Layout: sidebar pasa arriba, contenido abajo */
+  .question-layout {
+    flex-direction: column;
+  }
+
+  .skills-menu {
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: visible;
+    display: block;
+    padding-right: 6px;
+  }
+
+  .skill-group {
+    margin-bottom: 14px;
+  }
+
+  .skill-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .skill-group-grid {
+    gap: 5px;
+  }
+
+  .skill-question-box {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+
+  /* Navegación inferior */
+  .eval-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Caja antigua de examen (si aún la usas en algún lado) */
   .exam-viewport {
     height: min(68vh, 620px);
     padding-bottom: 190px;
@@ -568,21 +660,21 @@
   .exam-footer {
     margin-top: -190px;
   }
+}
 
-  /* botones en grid en móvil */
-  .eval-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+/* ===== Mobile pequeño (≤420px): todo un poco más compacto ===== */
+@media (max-width: 420px) {
+  .skills-menu {
+    max-height: 180px;
   }
 
-  .eval-nav .btn-danger {
-    grid-column: 1 / -1;
+  .skill-group-grid {
+    gap: 4px;
   }
 
-  .jump-dot {
-    width: 32px;
-    height: 32px;
-    font-size: 0.8rem;
+  .skill-question-box {
+    width: 28px;
+    height: 28px;
+    font-size: 0.72rem;
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom, timeout } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
@@ -181,5 +181,57 @@ export class RendicionesService {
         })
         .pipe(timeout(20000)),
     );
+  }
+
+  // =====================================================
+  // ✅ NUEVO: MENSAJE DE ERROR (faltaba en este servicio)
+  // =====================================================
+
+  getErrorMessage(error: any): string {
+    // ✅ FIX: este es el caso que se perdía. TimeoutInterceptor no lanza
+    // un error normal, lanza { timeout: true, message }. Sin este chequeo,
+    // cae directo al genérico y el mensaje específico que armaste
+    // ("el servidor tardó demasiado...") nunca le llega al estudiante.
+    if (error?.timeout === true) {
+      return error.message ?? 'El servidor tardó demasiado. Intenta nuevamente.';
+    }
+
+    if (error instanceof HttpErrorResponse) {
+      const response = error.error;
+
+      if (typeof response === 'string') {
+        return response;
+      }
+
+      if (Array.isArray(response?.message)) {
+        return response.message.join(', ');
+      }
+
+      if (typeof response?.message === 'string') {
+        return response.message;
+      }
+
+      if (error.status === 0) {
+        return 'No se pudo conectar con el servidor.';
+      }
+
+      if (error.status === 401) {
+        return 'Tu sesión expiró. Vuelve a iniciar sesión.';
+      }
+
+      if (error.status === 403) {
+        return 'No tienes permisos para realizar esta acción.';
+      }
+
+      if (error.status === 404) {
+        return 'No se encontró el recurso solicitado.';
+      }
+
+      if (error.status >= 500) {
+        return 'Ocurrió un error en el servidor.';
+      }
+    }
+
+    return 'Ocurrió un error inesperado.';
   }
 }

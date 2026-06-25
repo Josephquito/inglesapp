@@ -47,16 +47,18 @@ export class PreguntasTableComponent {
 
   modoLabel(p: any): string {
     const c = this.tipoCodigo(p);
-    if (c === 'MULTIPLE_CHOICE' || c === 'MATCHING') return 'Cerrada';
     if (c === 'LISTENING' || c === 'READING') return 'Bloque';
-    return 'Abierta';
+
+    const autoCalificable = p?.auto_calificable ?? p?.raw?.auto_calificable;
+    return autoCalificable ? 'Cerrada' : 'Abierta';
   }
 
   badgeClass(p: any) {
     const c = this.tipoCodigo(p);
-    if (c === 'MULTIPLE_CHOICE' || c === 'MATCHING') return 'badge-success';
     if (c === 'LISTENING' || c === 'READING') return 'badge-warning';
-    return 'badge-warning';
+
+    const autoCalificable = p?.auto_calificable ?? p?.raw?.auto_calificable;
+    return autoCalificable ? 'badge-success' : 'badge-warning';
   }
 
   extraInfo(p: any): string {

@@ -306,6 +306,83 @@
   margin-top: 12px;
   border-radius: 10px;
 }
+/* ✅ CHOOSE_IMAGE */
+.choose-image-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.choose-image-opt {
+  position: relative;
+  display: block;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.choose-image-opt:hover {
+  border-color: rgba(0, 116, 133, 0.35);
+}
+
+.choose-image-opt.selected {
+  border-color: #007485;
+  box-shadow: 0 0 0 3px rgba(0, 116, 133, 0.15);
+}
+
+.choose-image-opt input[type='radio'] {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 20px;
+  height: 20px;
+  accent-color: #007485;
+  z-index: 2;
+}
+
+.choose-image-opt img {
+  display: block !important;
+  width: 100% !important;
+  height: 180px !important;
+  object-fit: contain !important; /* ✅ cambio: ya no recorta */
+  background: #f3f4f6;
+}
+
+@media (max-width: 640px) {
+  .choose-image-options {
+    grid-template-columns: 1fr; /* en celular, una imagen por fila */
+  }
+  .choose-image-opt img {
+    height: 220px;
+  }
+}
+
+/* ✅ FILL_BLANK */
+.fill-blank-text {
+  line-height: 2.6; /* da espacio vertical para que el <select> no se vea apretado */
+  font-size: 1rem;
+  color: #111827;
+}
+
+/* especificidad más alta que ".select" a propósito, para ganarle al width:100% */
+.q-body .fill-blank-select {
+  display: inline-block;
+  width: auto;
+  min-width: 120px;
+  margin: 0 4px;
+  padding: 4px 10px;
+  font-weight: 700;
+  color: #046472;
+  border: 1px solid rgba(0, 116, 133, 0.3);
+  border-radius: 8px;
+  background: rgba(0, 116, 133, 0.06);
+}
 
 /* Responsive */
 @media (max-width: 640px) {

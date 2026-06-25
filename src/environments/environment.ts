@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://inglesapi-pyog.onrender.com', // <-- tu backend
+  apiUrl: 'http://localhost:3000', // <-- tu backend
 };

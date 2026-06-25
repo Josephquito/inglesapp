@@ -8,9 +8,7 @@
 
   <div *ngIf="estado?.error" class="q-error">{{ estado.error }}</div>
 
-  <!-- ✅ MEDIA (robusto) -->
   <div class="q-media" *ngIf="pregunta?.url_multimedia as mediaUrl">
-    <!-- Imagen -->
     <img
       *ngIf="mediaMode === 'image'"
       class="media-img"
@@ -20,7 +18,6 @@
       (error)="onImgError()"
     />
 
-    <!-- Video -->
     <video
       *ngIf="mediaMode === 'video'"
       class="media-video"
@@ -33,7 +30,6 @@
       Tu navegador no soporta este formato de video.
     </video>
 
-    <!-- Link fallback -->
     <a
       *ngIf="mediaMode === 'link'"
       class="media-link"
@@ -44,7 +40,6 @@
       Abrir recurso multimedia
     </a>
 
-    <!-- Mensajito opcional si cae a link -->
     <div *ngIf="mediaMode === 'link'" class="media-note">
       Si no se reproduce aquí, el formato del video puede no ser compatible con Chrome.
     </div>
@@ -61,8 +56,8 @@
     ></textarea>
   </div>
 
-  <!-- MULTIPLE_CHOICE -->
-  <div *ngIf="tipoCodigo() === 'MULTIPLE_CHOICE'" class="q-body">
+  <!-- ✅ MULTIPLE_CHOICE + TRUE_FALSE: mismo render, mismo mecanismo -->
+  <div *ngIf="tipoCodigo() === 'MULTIPLE_CHOICE' || tipoCodigo() === 'TRUE_FALSE'" class="q-body">
     <div class="options">
       <label class="opt" *ngFor="let o of pregunta?.opcionesRespuesta || []">
         <input
@@ -77,18 +72,63 @@
     </div>
   </div>
 
-  <!-- MATCHING -->
+  <!-- ✅ NUEVO: CHOOSE_IMAGE -->
+  <div *ngIf="tipoCodigo() === 'CHOOSE_IMAGE'" class="q-body">
+    <div class="choose-image-options">
+      <label
+        class="choose-image-opt"
+        *ngFor="let o of pregunta?.opcionesRespuesta || []"
+        [class.selected]="opcionSeleccionada === o.id_opcion"
+      >
+        <input
+          type="radio"
+          name="img_{{ pregunta?.id_pregunta }}"
+          [value]="o.id_opcion"
+          [checked]="opcionSeleccionada === o.id_opcion"
+          (change)="onOpcionChange(o.id_opcion)"
+        />
+        <img [src]="o.url_imagen" alt="Opción de imagen" loading="lazy" />
+      </label>
+    </div>
+  </div>
+
+  <!-- MATCHING (✅ select ahora controlado, refleja respuesta guardada) -->
   <div *ngIf="tipoCodigo() === 'MATCHING'" class="q-body">
     <div class="matching">
       <div class="row" *ngFor="let par of pregunta?.emparejamientos || []">
         <div class="left">{{ par.izquierda }}</div>
-        <select class="select" (change)="onMatchingChange(par.izquierda, $event)">
+        <select
+          class="select"
+          [value]="valorMatching(par.izquierda)"
+          (change)="onMatchingChange(par.izquierda, $event)"
+        >
           <option value="">Selecciona...</option>
           <option *ngFor="let d of pregunta?.emparejamientos || []" [value]="d.derecha">
             {{ d.derecha }}
           </option>
         </select>
       </div>
+    </div>
+  </div>
+
+  <!-- ✅ NUEVO: FILL_BLANK -->
+  <div *ngIf="tipoCodigo() === 'FILL_BLANK'" class="q-body">
+    <div class="fill-blank-text">
+      <ng-container *ngFor="let seg of fillBlankSegments">
+        <span *ngIf="seg.type === 'text'">{{ seg.value }}</span>
+
+        <select
+          *ngIf="seg.type === 'blank'"
+          class="select fill-blank-select"
+          [value]="valorMatching(seg.numero)"
+          (change)="onMatchingChange(seg.numero, $event)"
+        >
+          <option value="">...</option>
+          <option *ngFor="let o of pregunta?.opcionesRespuesta || []" [value]="o.texto">
+            {{ o.texto }}
+          </option>
+        </select>
+      </ng-container>
     </div>
   </div>
 
@@ -130,12 +170,10 @@
         <span class="rec-error" *ngIf="recError">{{ recError }}</span>
       </div>
 
-      <!-- Preview mientras sube -->
       <audio *ngIf="previewUrl" class="audio" controls>
         <source [src]="previewUrl" />
       </audio>
 
-      <!-- Audio definitivo -->
       <audio
         *ngIf="!previewUrl && (finalUrl || pregunta?.url_audio)"
         class="audio"
@@ -147,12 +185,15 @@
     </div>
   </div>
 
-  <!-- Otros -->
+  <!-- ✅ Otros: ya no debería caer aquí ninguno de los 9 tipos -->
   <div
     *ngIf="
       tipoCodigo() !== 'WRITING' &&
       tipoCodigo() !== 'MULTIPLE_CHOICE' &&
+      tipoCodigo() !== 'TRUE_FALSE' &&
+      tipoCodigo() !== 'CHOOSE_IMAGE' &&
       tipoCodigo() !== 'MATCHING' &&
+      tipoCodigo() !== 'FILL_BLANK' &&
       tipoCodigo() !== 'SPEAKING'
     "
     class="q-body"

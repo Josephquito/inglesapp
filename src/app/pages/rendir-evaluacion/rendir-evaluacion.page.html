@@ -108,69 +108,78 @@
 
             <ng-container *ngIf="!vm.suspended && (!vm.proctoringRequired || vm.proctoringReady)">
               <div class="question-layout">
-                <div class="question-viewport">
-                  <div class="block-head" *ngIf="vm.currentBloque">
-                    <div class="block-title">
-                      <span class="block-chip">{{ vm.currentBloque?.tipo?.codigo }}</span>
-                      <span>{{ vm.currentBloque?.enunciado }}</span>
+                <aside class="skills-menu" *ngIf="vm.groups?.length">
+                  <div class="skill-group" *ngFor="let g of vm.groups">
+                    <div class="skill-group-header">
+                      <span class="skill-group-name">{{ g.seccion }}</span>
                     </div>
-                    <div class="block-sub" *ngIf="vm.currentBloque?.texto_base">
-                      {{ vm.currentBloque.texto_base }}
+
+                    <div class="skill-group-grid">
+                      <button
+                        type="button"
+                        class="skill-question-box"
+                        *ngFor="let item of g.items"
+                        [class.current]="item.current"
+                        [class.answered]="item.answered"
+                        (click)="goTo(item.i)"
+                        [disabled]="vm.finalizando"
+                        [title]="'Pregunta ' + item.label"
+                      >
+                        {{ item.label }}
+                      </button>
                     </div>
-                    <audio *ngIf="vm.currentBloque?.url_audio" controls class="audio-player">
-                      <source [src]="vm.currentBloque.url_audio" />
-                    </audio>
+                  </div>
+                </aside>
+
+                <div class="question-main">
+                  <div class="question-viewport">
+                    <div class="block-head" *ngIf="vm.currentBloque">
+                      <div class="block-title">
+                        <span class="block-chip">{{ vm.currentBloque?.tipo?.codigo }}</span>
+                        <span>{{ vm.currentBloque?.enunciado }}</span>
+                      </div>
+                      <div class="block-sub" *ngIf="vm.currentBloque?.texto_base">
+                        {{ vm.currentBloque.texto_base }}
+                      </div>
+                      <audio *ngIf="vm.currentBloque?.url_audio" controls class="audio-player">
+                        <source [src]="vm.currentBloque.url_audio" />
+                      </audio>
+                    </div>
+
+                    <app-rendir-pregunta
+                      [pregunta]="vm.currentPregunta"
+                      [estado]="getState(vm.currentPregunta?.id_pregunta)"
+                      [id_intento]="vm.id_intento"
+                      (save)="onSavePregunta($event)"
+                    ></app-rendir-pregunta>
                   </div>
 
-                  <app-rendir-pregunta
-                    [pregunta]="vm.currentPregunta"
-                    [estado]="getState(vm.currentPregunta?.id_pregunta)"
-                    [id_intento]="vm.id_intento"
-                    (save)="onSavePregunta($event)"
-                  ></app-rendir-pregunta>
-                </div>
-
-                <div class="question-footer">
-                  <div class="eval-nav">
-                    <button
-                      class="btn btn-ghost"
-                      (click)="prev()"
-                      [disabled]="vm.isFirst || vm.finalizando"
-                    >
-                      Anterior
-                    </button>
-                    <button
-                      class="btn btn-neutral"
-                      (click)="next()"
-                      *ngIf="!vm.isLast"
-                      [disabled]="vm.finalizando"
-                    >
-                      Siguiente
-                    </button>
-                    <button
-                      class="btn btn-success"
-                      (click)="openFinalizarModal()"
-                      *ngIf="vm.isLast"
-                      [disabled]="vm.finalizando"
-                    >
-                      Finalizar
-                    </button>
-                  </div>
-
-                  <div class="jump" *ngIf="vm.total > 1">
-                    <button
-                      class="jump-dot"
-                      type="button"
-                      *ngFor="let j of vm.jump"
-                      [class.current]="j.current"
-                      [class.answered]="j.answered"
-                      (click)="goTo(j.i)"
-                      [disabled]="vm.finalizando"
-                      aria-label="Ir a pregunta {{ j.label }}"
-                      title="Pregunta {{ j.label }}"
-                    >
-                      {{ j.label }}
-                    </button>
+                  <div class="question-footer">
+                    <div class="eval-nav">
+                      <button
+                        class="btn btn-ghost"
+                        (click)="prev()"
+                        [disabled]="vm.isFirst || vm.finalizando"
+                      >
+                        Anterior
+                      </button>
+                      <button
+                        class="btn btn-neutral"
+                        (click)="next()"
+                        *ngIf="!vm.isLast"
+                        [disabled]="vm.finalizando"
+                      >
+                        Siguiente
+                      </button>
+                      <button
+                        class="btn btn-success"
+                        (click)="openFinalizarModal()"
+                        *ngIf="vm.isLast"
+                        [disabled]="vm.finalizando"
+                      >
+                        Finalizar
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

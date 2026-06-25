@@ -7,7 +7,16 @@ import { environment } from '../../environments/environment';
 export type TipoPreguntaMenu = {
   value: number;
   label: string;
-  codigo: 'WRITING' | 'MULTIPLE_CHOICE' | 'SPEAKING' | 'LISTENING' | 'MATCHING' | 'READING';
+  codigo:
+    | 'WRITING'
+    | 'MULTIPLE_CHOICE'
+    | 'SPEAKING'
+    | 'LISTENING'
+    | 'MATCHING'
+    | 'READING'
+    | 'TRUE_FALSE' // ✅ NUEVO
+    | 'FILL_BLANK' // ✅ NUEVO
+    | 'CHOOSE_IMAGE'; // ✅ NUEVO
   permite_opciones: boolean;
   requiere_seleccion: boolean;
   es_bloque: boolean;

@@ -371,6 +371,75 @@
   box-shadow: 0 0 0 4px rgba(0, 116, 133, 0.12);
 }
 
+/* ✅ FILL_BLANK — constructor de segmentos */
+.fill-blank-builder {
+  line-height: 2.2;
+  padding: 12px;
+  border: 1px dashed rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+/* ✅ ACTUALIZADO: ya no es <input>, es un span contenteditable.
+   Por eso ya NO necesita el !important — un <span> no entra en el
+   selector ".modal input:not([type='checkbox'])", así que no hay pelea
+   de especificidad que ganarle. */
+.fb-text-seg {
+  display: inline; /* en vez de: flex: 1 1 140px; min-width: 60px; */
+  padding: 2px 4px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  outline: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  cursor: text;
+}
+
+.fb-text-seg:focus {
+  background: rgba(0, 116, 133, 0.06);
+  box-shadow: 0 0 0 2px rgba(0, 116, 133, 0.15);
+}
+
+/* Placeholder simulado, porque contenteditable no tiene placeholder nativo */
+.fb-text-seg:empty::before {
+  content: 'Escribe aquí...';
+  color: #9ca3af;
+}
+
+.fb-blank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(0, 116, 133, 0.1);
+  border: 1px solid rgba(0, 116, 133, 0.3);
+}
+
+.fb-blank-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #046472;
+  white-space: nowrap;
+}
+
+.fill-blank-builder .fb-blank-chip input.fb-blank-input {
+  width: 140px !important;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 116, 133, 0.3);
+  font-size: 0.85rem;
+}
+
+.fb-blank-remove {
+  border: none;
+  background: transparent;
+  color: #b91c1c;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 2px;
+}
+
 /* Responsive */
 @media (max-width: 760px) {
   .grid {

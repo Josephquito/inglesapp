@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { UploadsService } from '../../../services/uploads.service';
 
+type FillBlankSegment = { type: 'text'; value: string } | { type: 'blank'; numero: string };
+
 @Component({
   selector: 'app-rendir-pregunta',
   standalone: true,
@@ -14,21 +16,20 @@ import { UploadsService } from '../../../services/uploads.service';
 export class RendirPreguntaComponent {
   @Input() pregunta: any;
   @Input() estado: any;
-  @Input() id_intento!: number; // ✅ pásalo desde el padre
+  @Input() id_intento!: number;
   @Output() save = new EventEmitter<any>();
 
-  // ===== modelos locales =====
   respuestaTexto = '';
   opcionSeleccionada: number | null = null;
   matching: Array<{ izquierda: string; derecha: string }> = [];
 
-  // ===== MEDIA: image -> video -> link =====
+  // ✅ NUEVO: segmentos del párrafo para FILL_BLANK (texto / espacio)
+  fillBlankSegments: FillBlankSegment[] = [];
+
   mediaMode: 'image' | 'video' | 'link' = 'image';
 
-  // evita reset por autosave/re-render
   private lastPreguntaId: number | null = null;
 
-  // ===== SPEAKING: recorder =====
   private stream: MediaStream | null = null;
   private recorder: MediaRecorder | null = null;
   private chunks: BlobPart[] = [];
@@ -41,11 +42,8 @@ export class RendirPreguntaComponent {
   recTimeText = '00:00';
   private recInterval: any = null;
 
-  // preview local
   previewBlob: Blob | null = null;
   previewUrl: string | null = null;
-
-  // url definitiva (local) para que no dependa del debounce del padre
   finalUrl: string | null = null;
 
   constructor(
@@ -56,49 +54,47 @@ export class RendirPreguntaComponent {
   ngOnChanges() {
     const id = Number(this.pregunta?.id_pregunta ?? 0) || null;
 
-    // Solo reiniciar cuando cambia de pregunta
     if (id && this.lastPreguntaId !== id) {
       this.lastPreguntaId = id;
 
-      // reset media
       this.mediaMode = 'image';
 
-      // reset respuestas locales
       this.respuestaTexto = this.pregunta?.respuesta_texto ?? '';
       this.opcionSeleccionada = this.pregunta?.id_opcion ?? null;
       this.matching = Array.isArray(this.pregunta?.respuesta_matching)
         ? [...this.pregunta.respuesta_matching]
         : [];
 
-      // speaking reset
+      // ✅ NUEVO: construir los segmentos del párrafo si es FILL_BLANK
+      if (this.tipoCodigo() === 'FILL_BLANK') {
+        this.buildFillBlankSegments(this.pregunta?.texto_base);
+      } else {
+        this.fillBlankSegments = [];
+      }
+
       this.stopTimerUI();
-      this.stopRecordingHard(); // por si estaba grabando
+      this.stopRecordingHard();
       this.uploading = false;
       this.recError = '';
 
-      // cargar url definitiva que venga del back
       this.finalUrl = this.pregunta?.url_audio ?? null;
 
-      // limpiar preview de la pregunta anterior
       this.clearPreviewOnly();
 
       this.cd.detectChanges();
       return;
     }
 
-    // Si el id no viene, al menos intenta reiniciar media si hay url_multimedia
     if (!id && this.pregunta?.url_multimedia) {
       this.mediaMode = 'image';
       this.cd.detectChanges();
     }
   }
 
-  // ===== UI helpers =====
   tipoCodigo(): string {
     return (this.pregunta?.tipo?.codigo ?? '').toString().toUpperCase();
   }
 
-  // ===== MEDIA handlers =====
   onImgError() {
     this.mediaMode = 'video';
     this.cd.detectChanges();
@@ -109,18 +105,17 @@ export class RendirPreguntaComponent {
     this.cd.detectChanges();
   }
 
-  // ===== WRITING =====
   onTextoChange() {
     this.save.emit({ respuesta_texto: this.respuestaTexto });
   }
 
-  // ===== MULTIPLE_CHOICE =====
+  // ===== MULTIPLE_CHOICE / TRUE_FALSE / CHOOSE_IMAGE (mismo mecanismo) =====
   onOpcionChange(id: number) {
     this.opcionSeleccionada = id;
     this.save.emit({ id_opcion: id });
   }
 
-  // ===== MATCHING =====
+  // ===== MATCHING / FILL_BLANK (mismo mecanismo: pares izquierda→derecha) =====
   setMatching(izquierda: string, derecha: string) {
     const idx = this.matching.findIndex((p) => p.izquierda === izquierda);
     if (idx >= 0) this.matching[idx] = { izquierda, derecha };
@@ -135,7 +130,28 @@ export class RendirPreguntaComponent {
     this.setMatching(izquierda, derecha);
   }
 
-  // ===== SPEAKING =====
+  // ✅ NUEVO: para que el <select> muestre la respuesta ya guardada
+  // (antes siempre volvía a "Selecciona...", aunque el dato sí estaba ahí)
+  valorMatching(clave: string): string {
+    return this.matching.find((p) => p.izquierda === clave)?.derecha ?? '';
+  }
+
+  // ✅ NUEVO: parte el párrafo de FILL_BLANK en segmentos de texto / espacio,
+  // para poder intercalar <select> donde corresponde cada {{blank_N}}
+  private buildFillBlankSegments(textoBase: string) {
+    const texto = String(textoBase ?? '');
+    const partes = texto.split(/(\{\{blank_[^}]+\}\})/g);
+
+    this.fillBlankSegments = partes
+      .filter((p) => p.length > 0)
+      .map((p) => {
+        const m = p.match(/^\{\{blank_([^}]+)\}\}$/);
+        if (m) return { type: 'blank' as const, numero: m[1] };
+        return { type: 'text' as const, value: p };
+      });
+  }
+
+  // ===== SPEAKING (sin cambios) =====
   async startRecording() {
     this.recError = '';
 
@@ -145,7 +161,6 @@ export class RendirPreguntaComponent {
       return;
     }
 
-    // si había preview anterior, lo reemplazamos
     this.clearPreviewOnly();
 
     try {
@@ -162,7 +177,6 @@ export class RendirPreguntaComponent {
         if (e.data && e.data.size > 0) this.chunks.push(e.data);
       };
 
-      // ✅ onstop async safe
       this.recorder.onstop = () => void this.onRecorderStop();
 
       this.recording = true;
@@ -192,7 +206,6 @@ export class RendirPreguntaComponent {
     }
   }
 
-  // si cambian de pregunta / destruyen / etc.
   private stopRecordingHard() {
     try {
       if (this.recorder && this.recording) {
@@ -216,13 +229,11 @@ export class RendirPreguntaComponent {
       this.chunks = [];
       this.cleanupStream();
 
-      // preview inmediato
       this.clearPreviewOnly();
       this.previewBlob = blob;
       this.previewUrl = URL.createObjectURL(blob);
       this.cd.detectChanges();
 
-      // ✅ AUTO SUBIR al detener (sobrescribe en backend)
       await this.autoUpload(blob);
     } catch {
       this.recError = 'No se pudo preparar el audio.';
@@ -231,7 +242,6 @@ export class RendirPreguntaComponent {
   }
 
   discardRecording() {
-    // “Reintentar” solo borra preview (no borra el definitivo)
     this.clearPreviewOnly();
     this.recError = '';
     this.cd.detectChanges();
@@ -261,16 +271,12 @@ export class RendirPreguntaComponent {
 
       if (!cleanUrl) throw new Error('No se recibió URL del audio');
 
-      // ✅ Para reproducir SIEMPRE el último (rompe caché)
       const playUrl = `${cleanUrl}${cleanUrl.includes('?') ? '&' : '?'}v=${Date.now()}`;
 
-      // ✅ reflejar inmediatamente en UI (usa playUrl)
       this.finalUrl = playUrl;
 
-      // ✅ guarda en BD la url limpia (sin v=timestamp)
       this.save.emit({ url_audio: cleanUrl });
 
-      // ✅ limpiar preview (pero queda el finalUrl)
       this.clearPreviewOnly();
     } catch (e: any) {
       this.recError = e?.error?.message ?? e?.message ?? 'Error guardando el audio.';
@@ -280,7 +286,6 @@ export class RendirPreguntaComponent {
     }
   }
 
-  // ===== helpers mime =====
   private pickAudioMimeType(): string | null {
     const candidates = [
       'audio/webm;codecs=opus',
@@ -318,7 +323,6 @@ export class RendirPreguntaComponent {
     this.previewBlob = null;
   }
 
-  // ===== timer UI =====
   private startTimerUI() {
     this.stopTimerUI();
     this.recSeconds = 0;
@@ -340,7 +344,6 @@ export class RendirPreguntaComponent {
     this.recTimeText = '00:00';
   }
 
-  // (opcional) si alguna vez destruyes el componente mientras graba
   ngOnDestroy() {
     this.stopTimerUI();
     this.stopRecordingHard();
@@ -348,20 +351,11 @@ export class RendirPreguntaComponent {
   }
 
   retry() {
-    // 1) Limpia errores/preview
     this.recError = '';
     this.clearPreviewOnly();
-
-    // 2) “Elimina lo grabado” (lo que quedó definitivo)
     this.finalUrl = null;
-
-    // 3) Opcional PERO recomendado: borrar en backend la respuesta guardada
-    // (como ahora sobrescribes el archivo, esto es para que el intento quede vacío)
     this.save.emit({ url_audio: '' });
-
     this.cd.detectChanges();
-
-    // 4) Inicia una nueva grabación
     void this.startRecording();
   }
 }

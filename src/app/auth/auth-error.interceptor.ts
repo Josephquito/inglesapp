@@ -35,7 +35,10 @@ export class AuthErrorInterceptor implements HttpInterceptor {
         const url = req.url ?? '';
         const isLogin = url.includes('/auth/login');
 
-        if (!isLogin && (status === 401 || status === 403)) {
+        // ✅ Solo 401 cierra sesión. El token es válido pero esa acción
+        // puntual no está permitida — eso lo debe manejar el componente,
+        // no el interceptor.
+        if (!isLogin && status === 401) {
           if (!this.redirecting) {
             this.redirecting = true;
 

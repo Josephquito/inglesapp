@@ -30,13 +30,16 @@
             <label>Tipo de pregunta *</label>
             <select
               [(ngModel)]="form.id_tipo_pregunta"
-              (ngModelChange)="onTipoSelected($event)"
+              (ngModelChange)="onTipoSelected($event, vm.tipos)"
               [disabled]="vm.loadingTipos || vm.saving"
             >
               <option [ngValue]="0">
                 {{ vm.loadingTipos ? 'Cargando...' : 'Seleccionar...' }}
               </option>
-              <option *ngFor="let t of vm.tipos" [ngValue]="t.value">{{ t.label }}</option>
+
+              <option *ngFor="let t of topTiposDisponibles(vm.tipos)" [ngValue]="t.value">
+                {{ t.label }}
+              </option>
             </select>
           </div>
         </div>
@@ -109,6 +112,185 @@
               <div class="callout-title">Speaking</div>
               <div class="callout-text">
                 El estudiante grabará su voz, la pregunta debera ser calificada manualmente.
+              </div>
+            </div>
+          </div>
+
+          <!-- TRUE - FALSE -->
+          <div class="section" *ngIf="vm.flags.showTrueFalse">
+            <div class="section-head">
+              <div>
+                <div class="section-title">True / False</div>
+                <div class="section-hint">Marca cuál opción es la correcta.</div>
+              </div>
+            </div>
+
+            <div class="list">
+              <div class="row-card" *ngFor="let op of form.opcionesRespuesta; let i = index">
+                <div class="row-main">
+                  <input type="text" [(ngModel)]="op.texto" disabled />
+                </div>
+
+                <label class="chip-check">
+                  <input
+                    type="radio"
+                    name="true-false-main"
+                    [checked]="op.es_correcta"
+                    (change)="onRadioCorrecta(i)"
+                  />
+                  <span>Correcta</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHOOSE_IMAGE -->
+          <div class="section" *ngIf="vm.flags.showChooseImage">
+            <div class="section-head">
+              <div>
+                <div class="section-title">Elegir imagen</div>
+                <div class="section-hint">Sube exactamente 2 imágenes y marca la correcta.</div>
+              </div>
+            </div>
+
+            <div class="list">
+              <div class="row-card" *ngFor="let op of form.opcionesRespuesta; let i = index">
+                <div class="row-main upload-row">
+                  <input
+                    type="text"
+                    [(ngModel)]="op.url_imagen"
+                    placeholder="URL de la imagen..."
+                  />
+
+                  <input
+                    #fileImgPregunta
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    (change)="
+                      subirImagenOpcion(i, fileImgPregunta.files?.item(0) || null);
+                      fileImgPregunta.value = ''
+                    "
+                  />
+
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    (click)="fileImgPregunta.click()"
+                    [disabled]="isUploadingImgOpcion(i) || vm.saving"
+                  >
+                    {{ isUploadingImgOpcion(i) ? 'Subiendo...' : 'Subir imagen' }}
+                  </button>
+                </div>
+
+                <label class="chip-check">
+                  <input
+                    type="radio"
+                    name="choose-image-main"
+                    [checked]="op.es_correcta"
+                    (change)="onRadioCorrecta(i)"
+                  />
+                  <span>Correcta</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================= -->
+          <!-- FILL_BLANK — ✅ REDISEÑADO -->
+          <!-- ========================= -->
+          <div class="section" *ngIf="vm.flags.showFillBlank">
+            <div class="callout">
+              <div class="callout-title">Completar espacios en blanco</div>
+              <div class="callout-text">
+                Escribe el párrafo en partes. Da clic en "+ Espacio en blanco" para insertar un
+                hueco — se agrega como un bloque aparte, así nunca se puede escribir mal por
+                accidente.
+              </div>
+            </div>
+
+            <div class="fill-blank-builder" style="margin-top: 12px">
+              <ng-container *ngFor="let seg of form.fillBlankSegments; let idx = index">
+                <span
+                  *ngIf="seg.type === 'text'"
+                  class="fb-text-seg"
+                  [attr.contenteditable]="vm.saving ? null : 'true'"
+                  (input)="onFbTextInput(seg, $event)"
+                  (keydown.enter)="$event.preventDefault()"
+                  (paste)="onFbPaste($event)"
+                ></span>
+
+                <span *ngIf="seg.type === 'blank'" class="fb-blank-chip">
+                  <span class="fb-blank-label">Espacio {{ seg.numero }}</span>
+                  <input
+                    type="text"
+                    class="fb-blank-input"
+                    [(ngModel)]="seg.respuesta"
+                    placeholder="Respuesta correcta"
+                    [disabled]="vm.saving"
+                  />
+                  <button
+                    type="button"
+                    class="fb-blank-remove"
+                    (click)="removeEspacioFillBlank(form.fillBlankSegments, idx)"
+                    [disabled]="vm.saving"
+                    title="Quitar este espacio"
+                  >
+                    ✕
+                  </button>
+                </span>
+              </ng-container>
+            </div>
+
+            <button
+              class="btn btn-ghost btn-sm"
+              type="button"
+              (click)="addEspacioFillBlank(form.fillBlankSegments)"
+              [disabled]="vm.saving"
+              style="margin-top: 8px"
+            >
+              + Espacio en blanco
+            </button>
+
+            <!-- DISTRACTORES (opcional) -->
+            <div class="section-head" style="margin-top: 14px">
+              <div>
+                <div class="section-title">Distractores (opcional)</div>
+                <div class="section-hint">
+                  Las respuestas correctas ya están en el banco automáticamente (las escribiste
+                  arriba, en cada espacio). Agrega aquí solo palabras de más, para confundir al
+                  estudiante.
+                </div>
+              </div>
+
+              <button
+                class="btn btn-ghost btn-sm"
+                type="button"
+                (click)="addDistractor()"
+                [disabled]="vm.saving"
+              >
+                + Distractor
+              </button>
+            </div>
+
+            <div class="list">
+              <div class="row-card" *ngFor="let d of form.distractores; let i = index">
+                <div class="row-main">
+                  <input
+                    type="text"
+                    [(ngModel)]="form.distractores[i]"
+                    placeholder="Palabra para confundir..."
+                  />
+                </div>
+
+                <button
+                  class="btn btn-ghost btn-sm"
+                  type="button"
+                  (click)="removeDistractor(i)"
+                  [disabled]="vm.saving"
+                >
+                  Quitar
+                </button>
               </div>
             </div>
           </div>
@@ -195,8 +377,7 @@
           <div class="section">
             <div class="callout">
               <div class="callout-title">
-                Pregunta en bloque, configura el recurso base y luego añade subpreguntas de opción
-                múltiple
+                Pregunta en bloque, configura el recurso base y luego añade subpreguntas.
               </div>
             </div>
 
@@ -254,12 +435,12 @@
             <div class="section-head">
               <div>
                 <div class="section-title">Subpreguntas</div>
-                <div class="section-hint">Cada subpregunta requiere 2+ opciones y 1 correcta.</div>
+                <div class="section-hint">Elige el tipo de cada subpregunta.</div>
               </div>
               <button
                 class="btn btn-ghost btn-sm"
                 type="button"
-                (click)="addSubpregunta()"
+                (click)="addSubpregunta(vm.tipos)"
                 [disabled]="vm.saving"
               >
                 + Subpregunta
@@ -283,6 +464,20 @@
 
                 <div class="grid">
                   <div class="field" style="grid-column: 1 / -1">
+                    <label>Tipo de subpregunta *</label>
+                    <select
+                      [ngModel]="sp.id_tipo_pregunta"
+                      (ngModelChange)="onSubTipoChange(i, $event, vm.tipos)"
+                      [disabled]="vm.saving"
+                    >
+                      <option [ngValue]="0">Seleccionar...</option>
+                      <option *ngFor="let t of subTiposDisponibles(vm.tipos)" [ngValue]="t.value">
+                        {{ t.label }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="field" style="grid-column: 1 / -1">
                     <label>Enunciado *</label>
                     <textarea
                       [(ngModel)]="sp.texto"
@@ -292,46 +487,269 @@
                   </div>
                 </div>
 
-                <div class="section-head" style="margin-top: 10px">
-                  <div>
-                    <div class="section-title" style="font-size: 0.95rem">Opciones</div>
-                    <div class="section-hint">Marca 1 correcta.</div>
-                  </div>
-                  <button
-                    class="btn btn-ghost btn-sm"
-                    type="button"
-                    (click)="addSubOpcion(i)"
-                    [disabled]="vm.saving"
-                  >
-                    + Opción
-                  </button>
-                </div>
-
-                <div class="list">
-                  <div class="row-card" *ngFor="let op of sp.opcionesRespuesta; let j = index">
-                    <div class="row-main">
-                      <input
-                        type="text"
-                        [(ngModel)]="op.texto"
-                        placeholder="Texto de la opción..."
-                      />
+                <!-- MULTIPLE_CHOICE -->
+                <ng-container *ngIf="subCodigo(sp, vm.tipos) === 'MULTIPLE_CHOICE'">
+                  <div class="section-head" style="margin-top: 10px">
+                    <div>
+                      <div class="section-title" style="font-size: 0.95rem">Opciones</div>
+                      <div class="section-hint">Mínimo 2. Marca al menos 1 correcta.</div>
                     </div>
-
-                    <label class="chip-check">
-                      <input type="checkbox" [(ngModel)]="op.es_correcta" />
-                      <span>Correcta</span>
-                    </label>
-
                     <button
                       class="btn btn-ghost btn-sm"
                       type="button"
-                      (click)="removeSubOpcion(i, j)"
-                      [disabled]="vm.saving || sp.opcionesRespuesta.length <= 2"
+                      (click)="addSubOpcion(i)"
+                      [disabled]="vm.saving"
                     >
-                      Quitar
+                      + Opción
                     </button>
                   </div>
-                </div>
+
+                  <div class="list">
+                    <div class="row-card" *ngFor="let op of sp.opcionesRespuesta; let j = index">
+                      <div class="row-main">
+                        <input
+                          type="text"
+                          [(ngModel)]="op.texto"
+                          placeholder="Texto de la opción..."
+                        />
+                      </div>
+
+                      <label class="chip-check">
+                        <input type="checkbox" [(ngModel)]="op.es_correcta" />
+                        <span>Correcta</span>
+                      </label>
+
+                      <button
+                        class="btn btn-ghost btn-sm"
+                        type="button"
+                        (click)="removeSubOpcion(i, j)"
+                        [disabled]="vm.saving || sp.opcionesRespuesta.length <= 2"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- TRUE_FALSE -->
+                <ng-container *ngIf="subCodigo(sp, vm.tipos) === 'TRUE_FALSE'">
+                  <div class="section-head" style="margin-top: 10px">
+                    <div>
+                      <div class="section-title" style="font-size: 0.95rem">True / False</div>
+                      <div class="section-hint">Marca cuál es la opción correcta.</div>
+                    </div>
+                  </div>
+
+                  <div class="list">
+                    <div class="row-card" *ngFor="let op of sp.opcionesRespuesta; let j = index">
+                      <div class="row-main">
+                        <input type="text" [value]="op.texto" disabled />
+                      </div>
+                      <label class="chip-check">
+                        <input
+                          type="radio"
+                          [name]="'tf-' + i"
+                          [checked]="op.es_correcta"
+                          (change)="onSubRadioCorrecta(sp.opcionesRespuesta, j)"
+                        />
+                        <span>Correcta</span>
+                      </label>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CHOOSE_IMAGE -->
+                <ng-container *ngIf="subCodigo(sp, vm.tipos) === 'CHOOSE_IMAGE'">
+                  <div class="section-head" style="margin-top: 10px">
+                    <div>
+                      <div class="section-title" style="font-size: 0.95rem">Elegir imagen</div>
+                      <div class="section-hint">Sube las 2 imágenes y marca la correcta.</div>
+                    </div>
+                  </div>
+
+                  <div class="list">
+                    <div class="row-card" *ngFor="let op of sp.opcionesRespuesta; let j = index">
+                      <div class="row-main upload-row">
+                        <input
+                          type="text"
+                          [(ngModel)]="op.url_imagen"
+                          placeholder="URL de la imagen..."
+                        />
+
+                        <input
+                          #fileImg
+                          type="file"
+                          hidden
+                          accept="image/*"
+                          (change)="
+                            subirImagenSubOpcion(i, j, fileImg.files?.item(0) || null);
+                            fileImg.value = ''
+                          "
+                        />
+
+                        <button
+                          class="btn btn-ghost btn-sm"
+                          type="button"
+                          (click)="fileImg.click()"
+                          [disabled]="isUploadingImg(i, j)"
+                        >
+                          {{ isUploadingImg(i, j) ? 'Subiendo...' : 'Subir imagen' }}
+                        </button>
+                      </div>
+
+                      <label class="chip-check">
+                        <input
+                          type="radio"
+                          [name]="'img-' + i"
+                          [checked]="op.es_correcta"
+                          (change)="onSubRadioCorrecta(sp.opcionesRespuesta, j)"
+                        />
+                        <span>Correcta</span>
+                      </label>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- MATCHING -->
+                <ng-container *ngIf="subCodigo(sp, vm.tipos) === 'MATCHING'">
+                  <div class="section-head" style="margin-top: 10px">
+                    <div>
+                      <div class="section-title" style="font-size: 0.95rem">Emparejar</div>
+                      <div class="section-hint">Mínimo 2 pares.</div>
+                    </div>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      type="button"
+                      (click)="addSubPar(i)"
+                      [disabled]="vm.saving"
+                    >
+                      + Par
+                    </button>
+                  </div>
+
+                  <div class="list">
+                    <div
+                      class="row-card row-2"
+                      *ngFor="let par of sp.emparejamientos; let j = index"
+                    >
+                      <input
+                        type="text"
+                        [(ngModel)]="par.izquierda"
+                        placeholder="Pregunta o palabra"
+                      />
+                      <input type="text" [(ngModel)]="par.derecha" placeholder="Respuesta" />
+
+                      <button
+                        class="btn btn-ghost btn-sm"
+                        type="button"
+                        (click)="removeSubPar(i, j)"
+                        [disabled]="vm.saving || sp.emparejamientos.length <= 2"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- ========================= -->
+                <!-- FILL_BLANK — ✅ REDISEÑADO (espejo de la pregunta suelta) -->
+                <!-- ========================= -->
+                <ng-container *ngIf="subCodigo(sp, vm.tipos) === 'FILL_BLANK'">
+                  <div class="section-head" style="margin-top: 10px">
+                    <div>
+                      <div class="section-title" style="font-size: 0.95rem">
+                        Párrafo con espacios
+                      </div>
+                      <div class="section-hint">
+                        Escribe en partes y da clic en "+ Espacio" para insertar un hueco.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="fill-blank-builder">
+                    <ng-container *ngFor="let seg of sp.fillBlankSegments; let idx = index">
+                      <span
+                        *ngIf="seg.type === 'text'"
+                        class="fb-text-seg"
+                        [attr.contenteditable]="vm.saving ? null : 'true'"
+                        (input)="onFbTextInput(seg, $event)"
+                        (keydown.enter)="$event.preventDefault()"
+                        (paste)="onFbPaste($event)"
+                      ></span>
+
+                      <span *ngIf="seg.type === 'blank'" class="fb-blank-chip">
+                        <span class="fb-blank-label">Espacio {{ seg.numero }}</span>
+                        <input
+                          type="text"
+                          class="fb-blank-input"
+                          [(ngModel)]="seg.respuesta"
+                          placeholder="Respuesta correcta"
+                          [disabled]="vm.saving"
+                        />
+                        <button
+                          type="button"
+                          class="fb-blank-remove"
+                          (click)="removeEspacioFillBlank(sp.fillBlankSegments, idx)"
+                          [disabled]="vm.saving"
+                          title="Quitar este espacio"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    </ng-container>
+                  </div>
+
+                  <button
+                    class="btn btn-ghost btn-sm"
+                    type="button"
+                    (click)="addEspacioFillBlank(sp.fillBlankSegments)"
+                    [disabled]="vm.saving"
+                    style="margin-top: 8px"
+                  >
+                    + Espacio en blanco
+                  </button>
+
+                  <!-- DISTRACTORES (opcional) -->
+                  <div class="section-head" style="margin-top: 10px">
+                    <div>
+                      <div class="section-title" style="font-size: 0.95rem">
+                        Distractores (opcional)
+                      </div>
+                      <div class="section-hint">
+                        Las respuestas correctas ya están en el banco automáticamente. Agrega aquí
+                        solo palabras de más, para confundir.
+                      </div>
+                    </div>
+                    <button
+                      class="btn btn-ghost btn-sm"
+                      type="button"
+                      (click)="addSubDistractor(i)"
+                      [disabled]="vm.saving"
+                    >
+                      + Distractor
+                    </button>
+                  </div>
+
+                  <div class="list">
+                    <div class="row-card" *ngFor="let d of sp.distractores; let j = index">
+                      <div class="row-main">
+                        <input
+                          type="text"
+                          [(ngModel)]="sp.distractores[j]"
+                          placeholder="Palabra para confundir..."
+                        />
+                      </div>
+                      <button
+                        class="btn btn-ghost btn-sm"
+                        type="button"
+                        (click)="removeSubDistractor(i, j)"
+                        [disabled]="vm.saving"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                </ng-container>
               </div>
             </div>
           </div>

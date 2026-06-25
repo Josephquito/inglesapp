@@ -42,10 +42,40 @@ import { isPlatformBrowser } from '@angular/common';
 type SaveState = { saving?: boolean; savedAt?: string; error?: string };
 
 type FlatItem =
-  | { kind: 'PREGUNTA'; id_pregunta: number; pregunta: any }
-  | { kind: 'SUBPREGUNTA'; id_pregunta: number; pregunta: any; bloque: any };
+  | { kind: 'PREGUNTA'; id_pregunta: number; pregunta: any; seccion: string }
+  | { kind: 'SUBPREGUNTA'; id_pregunta: number; pregunta: any; bloque: any; seccion: string };
 
 type ProctoringMotivo = 'NO_FACE' | 'TAB_SWITCH' | 'WINDOW_BLUR';
+
+// ✅ mapea cada tipo de pregunta (BD) a su sección visible
+const SECCION_POR_CODIGO: Record<string, string> = {
+  MULTIPLE_CHOICE: 'Use of Language',
+  TRUE_FALSE: 'Use of Language', // ✅ NUEVO
+  FILL_BLANK: 'Use of Language', // ✅ NUEVO
+  CHOOSE_IMAGE: 'Use of Language', // ✅ NUEVO
+  MATCHING: 'Use of Language',
+  READING: 'Reading',
+  LISTENING: 'Listening',
+  WRITING: 'Writing',
+  SPEAKING: 'Speaking',
+};
+
+// ✅ orden de aparición de las secciones en el sidebar
+const ORDEN_SECCION: Record<string, number> = {
+  'Use of Language': 1,
+  Reading: 2,
+  Listening: 3,
+  Writing: 4,
+  Speaking: 5,
+};
+
+// ✅ NUEVO: estructura de cada categoría del sidebar
+type SkillGroup = {
+  seccion: string;
+  total: number;
+  answeredCount: number;
+  items: { i: number; label: number; current: boolean; answered: boolean }[];
+};
 
 type UiState = {
   showFinalizarModal: boolean;
@@ -117,7 +147,7 @@ type Vm = {
   warnings: number;
   suspended: boolean;
 
-  jump: { i: number; label: number; current: boolean; answered: boolean }[];
+  groups: SkillGroup[]; // ✅ reemplaza a "jump"
 };
 
 @Component({
@@ -426,8 +456,20 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
         const tieneTiempo = !!data?.evaluacion?.tiene_tiempo;
         const timerDanger = ui.timerText.startsWith('00:0');
 
-        const jump = (data.flatPreguntas || []).map((_, i) => {
-          const pr = data.flatPreguntas[i]?.pregunta;
+        // ✅ NUEVO: construir groups en vez de jump
+        const groupsMap = new Map<string, SkillGroup>();
+        (data.flatPreguntas || []).forEach((flatItem, i) => {
+          const seccion = flatItem.seccion ?? 'Otros';
+          if (!groupsMap.has(seccion)) {
+            groupsMap.set(seccion, {
+              seccion,
+              total: 0,
+              answeredCount: 0,
+              items: [],
+            });
+          }
+
+          const pr = flatItem?.pregunta;
           const local = pr ? data.respuestasLocal[pr.id_pregunta] : null;
           const answered = !!(
             local?.respuesta_texto ||
@@ -435,8 +477,15 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
             (local?.respuesta_matching?.length ?? 0) ||
             local?.url_audio
           );
-          return { i, label: i + 1, current: i === currentIndex, answered };
+
+          const grupo = groupsMap.get(seccion)!;
+          grupo.items.push({ i, label: i + 1, current: i === currentIndex, answered });
+          grupo.total += 1;
+          if (answered) grupo.answeredCount += 1;
         });
+        const groups = Array.from(groupsMap.values()).sort(
+          (a, b) => (ORDEN_SECCION[a.seccion] ?? 99) - (ORDEN_SECCION[b.seccion] ?? 99),
+        );
 
         return {
           loading: !!load.loading,
@@ -478,7 +527,7 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
           warnings: ui.warnings,
           suspended: ui.suspended,
 
-          jump,
+          groups, // ✅ reemplaza a jump
         } as Vm;
       }),
       shareReplay(1),
@@ -653,18 +702,28 @@ export class RendirEvaluacionPage implements OnInit, OnDestroy {
 
     for (const p of preguntasSueltas || []) {
       if (!p?.id_pregunta) continue;
-      arr.push({ kind: 'PREGUNTA', id_pregunta: p.id_pregunta, pregunta: p });
+      const codigo = p?.tipo?.codigo ?? '';
+      const seccion = SECCION_POR_CODIGO[codigo] ?? 'Otros';
+      arr.push({ kind: 'PREGUNTA', id_pregunta: p.id_pregunta, pregunta: p, seccion });
     }
 
     for (const b of bloques || []) {
-      // ✅ IMPORTANTE: igual que tu código viejo (b.preguntas)
-      // si tu API usa otra key (subpreguntas), aquí se ajusta.
       const lista = Array.isArray(b?.preguntas) ? b.preguntas : [];
+      const codigo = b?.tipo?.codigo ?? '';
+      const seccion = SECCION_POR_CODIGO[codigo] ?? 'Otros';
       for (const p of lista) {
         if (!p?.id_pregunta) continue;
-        arr.push({ kind: 'SUBPREGUNTA', id_pregunta: p.id_pregunta, pregunta: p, bloque: b });
+        arr.push({
+          kind: 'SUBPREGUNTA',
+          id_pregunta: p.id_pregunta,
+          pregunta: p,
+          bloque: b,
+          seccion,
+        });
       }
     }
+
+    arr.sort((a, b) => (ORDEN_SECCION[a.seccion] ?? 99) - (ORDEN_SECCION[b.seccion] ?? 99));
 
     return arr;
   }
